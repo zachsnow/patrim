@@ -1,0 +1,54 @@
+{
+  // Basic settings.
+  "editor.tabSize": 2,
+  "editor.insertSpaces": true,
+  "files.insertFinalNewline": true,
+  "files.trimFinalNewlines": true,
+  "files.trimTrailingWhitespace": true,
+  "editor.rulers": [100],
+
+  // Formatting with Prettier.
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "editor.formatOnSave": true,
+  "prettier.configPath": ".prettierrc",
+  "[typescript]": {
+    // Override people's targetted language settings.
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.formatOnSave": true,
+    // Also sort imports
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  },
+  // Use the Prisma formatter for Prisma schema files.
+  "[prisma]": {
+    "editor.defaultFormatter": "Prisma.prisma"
+  },
+
+  // ESLint.
+  "eslint.enable": true,
+  "eslint.format.enable": false,
+
+  // Typescript.
+  "typescript.tsdk": "node_modules/typescript/lib",
+  "typescript.check.npmIsInstalled": false,
+  "typescript.unstable": {
+    "organizeImportsIgnoreCase": true
+  },
+
+  // Spell check ignored words.
+  "cSpell.words": [
+    "patrim",
+    "cauthon"
+  ],
+  "cSpell.ignorePaths": [
+    "package-lock.json",
+    "node_modules",
+    "vscode-extension",
+    ".git/objects",
+    ".vscode",
+    ".vscode-insiders",
+    "pnpm-lock.yaml"
+  ],
+  "githubPullRequests.ignoredPullRequestBranches": ["main"],
+}
