@@ -1,0 +1,13 @@
+# Dependencies.
+node_modules
+
+# Misc.
+**/.DS_Store
+*~
+
+# Cache files.
+*.tsbuildinfo
+.eslintcache
+
+# Don't accidentally run `npm`, dummy.
+package-lock.json
