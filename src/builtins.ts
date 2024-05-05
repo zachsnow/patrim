@@ -57,6 +57,16 @@ export const CoreBuiltins: Rule[] = [
     },
     [],
   ]),
+
+  rule(
+    ["#exit", reg("n", "number")],
+    [
+      function (this: Context, n: number) {
+        process.exit(n);
+      },
+      [reg("n")],
+    ],
+  ),
 ];
 
 const OperatorBuiltins: Rule[] = [
