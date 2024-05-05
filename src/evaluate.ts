@@ -29,23 +29,47 @@ export class Context {
   }
 
   /**
-   * Adds a new standard rule
+   * Adds a new term rule.
+   *
    * @param pattern
    * @param replacement
    * @returns
    */
-  public addRule = (pattern: unknown, replacement: unknown): Rule => {
-    const rule = new Rule(pattern, { type: "term", term: replacement });
+  public addRule = (pattern: unknown, replacement: unknown, name?: string): Rule => {
+    const rule = new Rule(
+      pattern,
+      { type: "term", term: replacement },
+      name ?? `rule-${this.rules.length}`,
+    );
+
     this.rules.push(rule);
     return rule;
   };
 
+  /**
+   * Removes the given `rule` (either by reference or by name).
+   *
+   * @param rule either a `Rule` instance or the name of a rule
+   * @returns `true` if the rule was removed, `false` otherwise
+   */
   public removeRule = (rule: unknown): boolean => {
-    const i = this.rules.indexOf(rule as Rule);
-    if (i >= 0) {
-      this.rules.splice(i, 1);
-      return true;
+    if (typeof rule === "string") {
+      const matchingRule = this.rules.find((r) => r.name === rule);
+      if (matchingRule) {
+        return this.removeRule(matchingRule);
+      }
+      return false;
     }
+
+    if (rule instanceof Rule) {
+      const i = this.rules.indexOf(rule as Rule);
+      if (i >= 0) {
+        this.rules.splice(i, 1);
+        return true;
+      }
+      return false;
+    }
+
     return false;
   };
 
@@ -79,7 +103,7 @@ export class Rule {
   constructor(
     public readonly pattern: unknown,
     public readonly replacement: Rule.Replacement,
-    public readonly name: string = "",
+    public readonly name?: string,
   ) {}
 
   public match(input: unknown): Rule.Bindings | null {
@@ -138,30 +162,30 @@ export const builtin = (pattern: unknown, builtin: Rule.Builtin, name?: string) 
 export const constant = (name: string, value: unknown) => rule(name, [() => value, []], name);
 
 /**
- * Given a `rule` and an `input`, attempts to match the input against the rule.
- * If the input matches the rule, a (possibly empty) set of `Bindings` are returned;
+ * Given a `pattern` and an `input`, attempts to match the input against the pattern.
+ * If the input matches the pattern, a (possibly empty) set of `Bindings` are returned;
  * otherwise returns `null`. Matching is applicative and does not mutate the rule
  * or the input.
  *
- * @param rule the rule to match
- * @param input the input to match against the rule
- * @returns the bindings, if the input matches the rule; otherwise, `null`
+ * @param pattern the pattern term to match
+ * @param input the input term to match against the pattern
+ * @returns the bindings, if the input matches the pattern; otherwise, `null`
  *
  * @internal
  */
-export function match(rule: unknown, input: unknown): Rule.Bindings | null {
-  function match(rule: unknown, input: unknown, bindings: Rule.Bindings): boolean {
+export function match(pattern: unknown, input: unknown): Rule.Bindings | null {
+  function match(pattern: unknown, input: unknown, bindings: Rule.Bindings): boolean {
     // Dereference the already-bound registers.
-    if (rule instanceof Register) {
-      rule = bindings[rule.name]?.value ?? rule;
+    if (pattern instanceof Register) {
+      pattern = bindings[pattern.name]?.value ?? rule;
     }
 
     // If the rule is an unbound register, bind it.
-    if (rule instanceof Register) {
-      if (rule.match(input)) {
-        bindings[rule.name] = {
+    if (pattern instanceof Register) {
+      if (pattern.match(input)) {
+        bindings[pattern.name] = {
           value: input,
-          eager: rule.kind === "eager",
+          eager: pattern.kind === "eager",
         };
         return true;
       }
@@ -169,7 +193,7 @@ export function match(rule: unknown, input: unknown): Rule.Bindings | null {
     }
 
     // Otherwise, match.
-    switch (typeof rule) {
+    switch (typeof pattern) {
       case "bigint":
       case "boolean":
       case "string":
@@ -178,14 +202,14 @@ export function match(rule: unknown, input: unknown): Rule.Bindings | null {
       case "symbol":
       case "undefined":
         // Primitives use value equality.
-        return rule === input;
+        return pattern === input;
       case "object":
-        if (rule === null) {
+        if (pattern === null) {
           return input === null;
         }
 
         // Arrays are matched element-wise.
-        if (Array.isArray(rule)) {
+        if (Array.isArray(pattern)) {
           if (!Array.isArray(input)) {
             return false;
           }
@@ -193,13 +217,13 @@ export function match(rule: unknown, input: unknown): Rule.Bindings | null {
           // Zip the input and output arrays together, accommodating splats.
           let splat = false;
           let i = 0;
-          for (; i < rule.length; i++) {
-            const r = rule[i];
+          for (; i < pattern.length; i++) {
+            const r = pattern[i];
 
-            // Rule contains a splat and matches the rest of the input.
+            // Pattern contains a splat and matches the rest of the input.
             if (r instanceof Register && r.splat) {
               // TODO: allow a single splat anywhere in the array.
-              assert(i === rule.length - 1, "splat must be last element in array");
+              assert(i === pattern.length - 1, "splat must be last element in array");
               bindings[r.name] = {
                 value: input.slice(i),
                 eager: r.kind === "eager",
@@ -209,12 +233,12 @@ export function match(rule: unknown, input: unknown): Rule.Bindings | null {
               break;
             }
 
-            // Rule is too long.
+            // Pattern is too long.
             if (i >= input.length) {
               return false;
             }
 
-            // Rule does not match.
+            // Pattern does not match.
             if (!match(r, input[i], bindings)) {
               return false;
             }
@@ -229,11 +253,11 @@ export function match(rule: unknown, input: unknown): Rule.Bindings | null {
         }
 
         // Objects are matched key-wise; extra keys in the input are ignored.
-        if (isSimpleObject(rule)) {
+        if (isSimpleObject(pattern)) {
           if (input === null || typeof input !== "object") {
             return false;
           }
-          for (const key in rule) {
+          for (const key in pattern) {
             if (!match((rule as any)[key], (input as any)[key], bindings)) {
               return false;
             }
@@ -242,12 +266,12 @@ export function match(rule: unknown, input: unknown): Rule.Bindings | null {
         }
 
         // Class instances are treated as primitives, and use value equality.
-        return rule === input;
+        return pattern === input;
     }
   }
 
   const bindings: Rule.Bindings = {};
-  if (match(rule, input, bindings)) {
+  if (match(pattern, input, bindings)) {
     return bindings;
   }
   return null;
