@@ -1,22 +1,8 @@
-import {
-  BeginTerm,
-  Context,
-  EndOfInput,
-  EndOfLine,
-  EndTerm,
-  evaluate,
-  execute,
-  instantiate,
-  lex,
-  match,
-  parse,
-  reg,
-  rule,
-  Strategy,
-  subterms,
-} from ".";
+import { execute } from ".";
+import { Context, instantiate, match, rule, subterms } from "./evaluate";
+import { BeginTerm, EndOfInput, EndOfLine, EndTerm, lex, parse, reg } from "./parse";
 
-const collect = (term: unknown, strategy?: Strategy): unknown[] => {
+const collect = (term: unknown, strategy?: Context.Strategy): unknown[] => {
   return Array.from(subterms(term, new Context([], strategy))).map((subterm) => subterm.term);
 };
 
@@ -268,17 +254,17 @@ describe("subterms", () => {
 
 describe("evaluate", () => {
   test("primitives", () => {
-    expect(evaluate([1])).toEqual([1]);
-    expect(evaluate([null])).toEqual([null]);
-    expect(evaluate([undefined])).toEqual([undefined]);
+    expect(execute([1])).toEqual(1);
+    expect(execute([null])).toEqual(null);
+    expect(execute([undefined])).toEqual(undefined);
   });
 
-  fit("simple rules", () => {
-    expect(evaluate([1, 1], new Context([rule(1, 2)]))).toEqual([2, 2]);
-    expect(evaluate([1, "hi"], new Context([rule(1, 2)]))).toEqual([2, "hi"]);
-    expect(evaluate(["hi", 1], new Context([rule(["hi", reg("a")], ["hello", reg("a")])]))).toEqual(
-      ["hello", 1],
-    );
+  test("simple rules", () => {
+    expect(execute([[1, 1]], new Context([rule(1, 2)]))).toEqual([2, 2]);
+    expect(execute([[1, "hi"]], new Context([rule(1, 2)]))).toEqual([2, "hi"]);
+    expect(
+      execute([["hi", 1]], new Context([rule(["hi", reg("a")], ["hello", reg("a")])])),
+    ).toEqual(["hello", 1]);
   });
 
   test("#add-rule", () => {
@@ -291,6 +277,12 @@ describe("evaluate", () => {
 });
 
 describe("end-to-end", () => {
+  test("exceptions", () => {
+    expect(() => execute(parse(`#throw "some error"`))).toThrow("some error");
+    expect(execute(parse(`#try "hi"`))).toEqual("hi");
+    expect(execute(parse(`#try (#throw "some error")`))).toEqual("some error");
+  });
+
   test("arithmetic", () => {
     expect(
       execute(

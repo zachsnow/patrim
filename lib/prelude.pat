@@ -2,8 +2,8 @@
 // ^ A nicer syntax for comments.
 
 // A nicer syntax for defining rules.
-#add-rule (:: ?l ?r) (#add-rule ?l ?r) "::"
-#add-rule (:: ?l ?r ?name:string) (#add-rule ?l ?r ?name)
+#add-rule (:: ?pattern ?replacement) (#add-rule ?pattern ?replacement) "::"
+#add-rule (:: ?pattern ?replacement ?name:string) (#add-rule ?pattern ?replacement ?name)
 
 // A nicer syntax for keying into objects and lists.
 :: (!l . ?r:string) (#get ?l ?r) "object . property"
@@ -14,8 +14,9 @@
 :: (!object . ?method:string ?arguments:array) (#call (?object . ?method) ?object ?arguments)
 
 // Test functions.
-:: (assert true) ()
-:: (assert false) (#throw "Assertion failed.")
+:: (assert !test) (assertAux ?test)
+:: (assertAux true) ()
+:: (assertAux false) (#throw "Assertion failed.")
 
 :: (deny false) ()
 :: (deny true) (#throw "Assertion failed.")

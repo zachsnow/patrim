@@ -1,6 +1,8 @@
 import * as fs from "fs";
 import path from "path";
-import { execute, parse } from "../src";
+import { start } from "repl";
+import { Context, execute, parse } from "../src";
+import { Builtins, CoreBuiltins } from "../src/builtins";
 
 const BIN = "patrim cauthon";
 
@@ -13,12 +15,38 @@ process.on("uncaughtException", (err) => {
   process.exit(-1);
 });
 
+async function startRepl(debug: boolean, context: Context) {
+  debug && console.debug(`${BIN}: repl starting...`);
+  const server = start({
+    prompt: `? `,
+    eval: (cmd, ctx, filename, callback) => {
+      try {
+        const program = parse(cmd);
+        const result = execute(program, context);
+        callback(null, result);
+      } catch (e) {
+        callback(e instanceof Error ? e : new Error(`${e}`), null);
+      }
+    },
+  });
+  const promise = new Promise<void>((resolve) => {
+    server.on("exit", () => {
+      debug && console.debug(`${BIN}: repl exiting...`);
+      resolve();
+    });
+  });
+  return promise;
+}
+
 async function main() {
   // Exclude the first two arguments: node and the script itself.
   let args = process.argv.slice(2);
 
   const noPrelude = args.includes("--no-prelude");
   const debug = args.includes("--debug");
+  const repl = args.includes("--repl");
+  const noDefaultBuiltins = args.includes("--no-default-builtins");
+  const noBuiltins = args.includes("--no-builtins");
 
   if (debug) {
     console.debug(`${BIN}: debug mode enabled`);
@@ -30,8 +58,8 @@ async function main() {
   // Get passed filenames.
   args = args.filter((arg) => !arg.startsWith("--"));
 
-  // If no files are provided, print usage and exit.
-  if (args.length === 0) {
+  // If no files are provided and we aren't entering a repl, print usage and exit.
+  if (args.length === 0 && !repl) {
     console.info(`${BIN}: no files to read.`);
     console.info("usage: pc [--no-prelude] <file1> <file2> ...");
     process.exit(-1);
@@ -43,17 +71,29 @@ async function main() {
   // Read all files and concatenate them into a single program.
   const content = filenames
     .map((filename) => {
-      console.debug(`${BIN}: reading file:`, filename);
+      debug && console.debug(`${BIN}: reading file:`, filename);
       return fs.readFileSync(filename, "utf8");
     })
     .join("\n");
 
   try {
     // Parse the program and execute it.
-    const program = parse(content);
-    const result = execute(program);
+    debug && console.debug(`${BIN}: read files:`, content);
 
-    // By default we print the final result.
+    const program = parse(content);
+    debug && console.debug(`${BIN}: parsed program:`, program);
+
+    // Create a context so we can pass it to the repl.
+    const context = new Context(noBuiltins ? [] : noDefaultBuiltins ? CoreBuiltins : Builtins);
+    const result = execute(program, context);
+
+    // Run the repl if --repl is passed.
+    if (repl) {
+      await startRepl(debug, context);
+      return;
+    }
+
+    // Otherwise, by default we print the final result.
     console.info(`${BIN}:`, result);
 
     debug && console.debug(`${BIN}: done.`);
