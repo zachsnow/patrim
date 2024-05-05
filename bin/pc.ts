@@ -1,5 +1,6 @@
 import * as fs from "fs";
-import { evaluate, parse } from "../src";
+import path from "path";
+import { execute, parse } from "../src";
 
 const BIN = "patrim cauthon";
 
@@ -13,37 +14,54 @@ process.on("uncaughtException", (err) => {
 });
 
 async function main() {
-  const args = process.argv.slice(2);
+  // Exclude the first two arguments: node and the script itself.
+  let args = process.argv.slice(2);
 
   const noPrelude = args.includes("--no-prelude");
-  args.splice(args.indexOf("--no-prelude"), 1);
+  const debug = args.includes("--debug");
+
+  if (debug) {
+    console.debug(`${BIN}: debug mode enabled`);
+  }
+  if (noPrelude) {
+    debug && console.debug(`${BIN}: skipping prelude...`);
+  }
+
+  // Get passed filenames.
+  args = args.filter((arg) => !arg.startsWith("--"));
+
+  // If no files are provided, print usage and exit.
   if (args.length === 0) {
     console.info(`${BIN}: no files to read.`);
     console.info("usage: pc [--no-prelude] <file1> <file2> ...");
     process.exit(-1);
   }
 
-  const filenames = noPrelude ? args : ["../lib/prelude.pat", ...args];
-  if (noPrelude) {
-    console.debug(`${BIN}: skipping prelude...`);
-  }
+  // Include the prelude unless --no-prelude is passed.
+  const filenames = noPrelude ? args : [path.join(__dirname, "../lib/prelude.pat"), ...args];
 
+  // Read all files and concatenate them into a single program.
   const content = filenames
     .map((filename) => {
       console.debug(`${BIN}: reading file:`, filename);
       return fs.readFileSync(filename, "utf8");
     })
     .join("\n");
-  console.debug(`${BIN}: content:`, content);
 
-  const term = parse(content);
-  console.debug(`${BIN}: parsed term:`, term);
+  try {
+    // Parse the program and execute it.
+    const program = parse(content);
+    const result = execute(program);
 
-  const result = evaluate(term);
-  console.debug(`${BIN}: evaluated term:`, result);
+    // By default we print the final result.
+    console.info(`${BIN}:`, result);
 
-  console.info(`${BIN}: done.`);
-  process.exit(0);
+    debug && console.debug(`${BIN}: done.`);
+    process.exit(0);
+  } catch (e) {
+    console.error(`${BIN}: error:`, e);
+    process.exit(-1);
+  }
 }
 
 main();

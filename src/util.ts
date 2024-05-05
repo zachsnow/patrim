@@ -10,6 +10,5 @@ export function assert(value: boolean, message: string = ""): asserts value {
 export type SimpleObject = Record<string, unknown>;
 
 export function isSimpleObject(input: object): input is SimpleObject {
-  return input?.constructor === Object;
-};
-
+  return input !== globalThis && input?.constructor === Object;
+}

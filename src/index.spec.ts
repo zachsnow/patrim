@@ -1,15 +1,17 @@
 import {
   BeginTerm,
   Context,
+  EndOfInput,
   EndOfLine,
   EndTerm,
   evaluate,
+  execute,
   instantiate,
   lex,
   match,
   parse,
   reg,
-  Register,
+  rule,
   Strategy,
   subterms,
 } from ".";
@@ -18,39 +20,39 @@ const collect = (term: unknown, strategy?: Strategy): unknown[] => {
   return Array.from(subterms(term, new Context([], strategy))).map((subterm) => subterm.term);
 };
 
-const value = (term: unknown): unknown => {
-  const result = evaluate(term);
-  if (Array.isArray(result)) {
-    return result[result.length - 1];
-  }
-  throw new Error("expected array");
-};
-
 describe("lex", () => {
   test("lex", () => {
-    expect(lex("1")).toEqual([1]);
-    expect(lex("1\n2")).toEqual([1, EndOfLine, 2]);
-    expect(lex("1\n\n2")).toEqual([1, EndOfLine, 2]);
-    expect(lex("1 \n 2")).toEqual([1, EndOfLine, 2]);
-    expect(lex("1 \t 2")).toEqual([1, 2]);
-    expect(lex("hi")).toEqual(["hi"]);
-    expect(lex("1 ( hi ?r a)")).toEqual([1, BeginTerm, "hi", reg("r"), "a", EndTerm]);
-    expect(lex("(1)")).toEqual([BeginTerm, 1, EndTerm]);
-    expect(lex("(1 hello)")).toEqual([BeginTerm, 1, "hello", EndTerm]);
-    expect(lex("true")).toEqual([true]);
-    expect(lex("false")).toEqual([false]);
-    expect(lex("null")).toEqual([null]);
-    expect(lex("undefined")).toEqual([undefined]);
+    expect(lex("")).toEqual([EndOfInput]);
+    expect(lex("1")).toEqual([1, EndOfInput]);
+    expect(lex("1\n2")).toEqual([1, EndOfLine, 2, EndOfInput]);
+    expect(lex("1\n\n2")).toEqual([1, EndOfLine, 2, EndOfInput]);
+    expect(lex("1 \n 2")).toEqual([1, EndOfLine, 2, EndOfInput]);
+    expect(lex("1 \t 2")).toEqual([1, 2, EndOfInput]);
+    expect(lex("hi")).toEqual(["hi", EndOfInput]);
+    expect(lex("1 ( hi ?r a)")).toEqual([1, BeginTerm, "hi", reg("r"), "a", EndTerm, EndOfInput]);
+    expect(lex("(1)\n")).toEqual([BeginTerm, 1, EndTerm, EndOfLine, EndOfInput]);
+    expect(lex("(1 hello)")).toEqual([BeginTerm, 1, "hello", EndTerm, EndOfInput]);
+    expect(lex("true")).toEqual([true, EndOfInput]);
+    expect(lex("false")).toEqual([false, EndOfInput]);
+    expect(lex("null")).toEqual([null, EndOfInput]);
+    expect(lex("undefined")).toEqual([undefined, EndOfInput]);
+  });
+
+  test("registers", () => {
+    expect(lex("?a")[0]).toEqual(reg("a"));
+    expect(lex("?abc")[0]).toEqual(reg("abc"));
+    expect(lex("?a:number")[0]).toEqual(reg("a", "number"));
+    expect(lex("!a")[0]).toEqual(reg("a", undefined, false, "eager"));
   });
 
   test("quoted strings", () => {
-    expect(lex('"hi"')).toEqual(["hi"]);
-    expect(lex('a "hi there"')).toEqual(["a", "hi there"]);
-    expect(lex('a "hi \\"there\\"" 1')).toEqual(["a", 'hi "there"', 1]);
+    expect(lex('"hi"')).toEqual(["hi", EndOfInput]);
+    expect(lex('a "hi there"')).toEqual(["a", "hi there", EndOfInput]);
+    expect(lex('a "hi \\"there\\"" 1')).toEqual(["a", 'hi "there"', 1, EndOfInput]);
   });
 });
 
-fdescribe("parse", () => {
+describe("parse", () => {
   test("valid primitives", () => {
     // Primitives.
     expect(parse("1")).toEqual([1]);
@@ -62,18 +64,53 @@ fdescribe("parse", () => {
     expect(parse("undefined")).toEqual([undefined]);
   });
 
-  test("implicit outer term", () => {
-    expect(parse("1 2")).toEqual([1, 2]);
-    expect(parse("1 2 \n hi")).toEqual([[1, 2], "hi"]);
-    expect(parse("1 \n 2")).toEqual([1, 2]);
-  });
-
-  test("valid structured values", () => {
+  test("structured values", () => {
     expect(parse("(1)")).toEqual([[1]]);
+    expect(parse("( 1 )")).toEqual([[1]]);
     expect(parse("(1 2)")).toEqual([[1, 2]]);
     expect(parse("(1 \n 2)")).toEqual([[1, 2]]);
+    expect(parse("(1 (hello world))")).toEqual([[1, ["hello", "world"]]]);
+  });
 
-    expect(parse("(1 hello)")).toEqual([1, "hello"]);
+  test("whitespace", () => {
+    expect(parse("")).toEqual([]);
+    expect(parse(" \t\n")).toEqual([]);
+    expect(parse("\n\n ")).toEqual([]);
+  });
+
+  test("valid programs", () => {
+    expect(
+      parse(`
+        1 2
+    `),
+    ).toEqual([[1, 2]]);
+    expect(
+      parse(`
+      (1 2)
+    `),
+    ).toEqual([[1, 2]]);
+    expect(
+      parse(`
+        1 2
+        hi
+    `),
+    ).toEqual([[1, 2], "hi"]);
+    expect(
+      parse(`
+        1 2
+        (hi)
+    `),
+    ).toEqual([[1, 2], ["hi"]]);
+
+    expect(
+      parse(`
+        1 2
+        hello world
+        (3 4)
+
+        true
+    `),
+    ).toEqual([[1, 2], ["hello", "world"], [3, 4], true]);
   });
 
   test("invalid", () => {
@@ -132,10 +169,47 @@ describe("match", () => {
   });
 
   test("registers", () => {
-    expect(match(reg("a"), 1)).toEqual({ a: 1 });
-    expect(match([reg("a"), reg("b")], [1, 2])).toEqual({ a: 1, b: 2 });
-    expect(match([reg("a"), reg("a")], [1, 1])).toEqual({ a: 1 });
+    expect(match(reg("a"), 1)).toEqual({ a: { value: 1, eager: false } });
+    expect(match([reg("a"), reg("b")], [1, 2])).toEqual({
+      a: { value: 1, eager: false },
+      b: { value: 2, eager: false },
+    });
+    expect(match([reg("a"), reg("a")], [1, 1])).toEqual({ a: { value: 1, eager: false } });
     expect(match([reg("a"), reg("a")], [1, 2])).toBeNull();
+  });
+
+  test("splats", () => {
+    expect(match([reg("s", undefined, true)], [1, 2, 3])).toEqual({
+      s: {
+        value: [1, 2, 3],
+        splat: true,
+        eager: false,
+      },
+    });
+
+    expect(match([1, reg("s", undefined, true)], [1, 2, 3])).toEqual({
+      s: {
+        value: [2, 3],
+        splat: true,
+        eager: false,
+      },
+    });
+
+    expect(match([1, 2, 3, reg("s", undefined, true)], [1, 2, 3])).toEqual({
+      s: {
+        value: [],
+        splat: true,
+        eager: false,
+      },
+    });
+
+    expect(match([reg("s", undefined, true)], [])).toEqual({
+      s: {
+        value: [],
+        splat: true,
+        eager: false,
+      },
+    });
   });
 });
 
@@ -194,70 +268,48 @@ describe("subterms", () => {
 
 describe("evaluate", () => {
   test("primitives", () => {
-    expect(evaluate(1)).toBe(1);
-    expect(evaluate(null)).toBe(null);
-    expect(evaluate(undefined)).toBe(undefined);
+    expect(evaluate([1])).toEqual([1]);
+    expect(evaluate([null])).toEqual([null]);
+    expect(evaluate([undefined])).toEqual([undefined]);
   });
 
-  test("simple rules", () => {
-    expect(evaluate([1, 1], new Context([{ pattern: 1, replacement: 2 }]))).toEqual([2, 2]);
-    expect(
-      evaluate(
-        ["hi", 1],
-        new Context([{ pattern: ["hi", reg("a")], replacement: ["hello", reg("a")] }]),
-      ),
-    ).toEqual(["hello", 1]);
-  });
-
-  test("foreign", () => {
-    expect(evaluate(1, new Context([{ pattern: 1, replacement: [() => 2] }]))).toBe(2);
+  fit("simple rules", () => {
+    expect(evaluate([1, 1], new Context([rule(1, 2)]))).toEqual([2, 2]);
+    expect(evaluate([1, "hi"], new Context([rule(1, 2)]))).toEqual([2, "hi"]);
+    expect(evaluate(["hi", 1], new Context([rule(["hi", reg("a")], ["hello", reg("a")])]))).toEqual(
+      ["hello", 1],
+    );
   });
 
   test("#add-rule", () => {
-    expect(value([["#add-rule", 1, "Hello!"], 1])).toBe("Hello!");
+    expect(execute([["#add-rule", 1, "Hello!"], 1])).toBe("Hello!");
   });
 
   test("#remove-rule", () => {
-    expect(value([["#remove-rule", ["#add-rule", 1, "Hello!"]]])).toBe([true]);
-  });
-});
-
-describe("Register", () => {
-  test("equality", () => {
-    expect(reg("a")).toEqual(reg("a"));
-    expect(reg("a")).not.toEqual(reg("b"));
-    expect(reg("a")).not.toEqual(reg("a", "number"));
-    expect(reg("a", "number")).toEqual(reg("a", "number"));
-    expect(reg("a", "number", false, "eager")).toEqual(reg("a", "number", false, "lazy"));
-  });
-
-  test("parse", () => {
-    expect(Register.parse("?a")).toEqual(reg("a"));
-    expect(Register.parse("?abc")).toEqual(reg("abc"));
-    expect(Register.parse("?a:number")).toEqual(reg("a", "number"));
+    expect(execute([["#remove-rule", ["#add-rule", 1, "Hello!"]]])).toBe(true);
   });
 });
 
 describe("end-to-end", () => {
   test("arithmetic", () => {
     expect(
-      value(
+      execute(
         parse(`
-      (1 + (2 * 3))
-    `),
+          (1 + (2 * 3))
+        `),
       ),
     ).toBe(7);
   });
 
   test("factorial", () => {
     expect(
-      value(
+      execute(
         parse(`
-      (#add-rule (factorial 0) 1)
-      (#add-rule (factorial ?n:number) (?n * (factorial (?n - 1))))
+          (#add-rule (factorial 0) 1)
+          (#add-rule (factorial ?n:number) (?n * (factorial (?n - 1))))
 
-      (factorial 3)
-    `),
+          (factorial 3)
+        `),
       ),
     ).toBe(6);
   });
