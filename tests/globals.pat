@@ -1,1 +1,1 @@
-assert (((#global . "Number") "3") === 3)
+assert (((#global . "Number") ("3")) === 3)

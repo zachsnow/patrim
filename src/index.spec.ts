@@ -155,12 +155,12 @@ describe("match", () => {
   });
 
   test("registers", () => {
-    expect(match(reg("a"), 1)).toEqual({ a: { value: 1, eager: false } });
+    expect(match(reg("a"), 1)).toEqual({ a: { value: 1 } });
     expect(match([reg("a"), reg("b")], [1, 2])).toEqual({
-      a: { value: 1, eager: false },
-      b: { value: 2, eager: false },
+      a: { value: 1 },
+      b: { value: 2 },
     });
-    expect(match([reg("a"), reg("a")], [1, 1])).toEqual({ a: { value: 1, eager: false } });
+    expect(match([reg("a"), reg("a")], [1, 1])).toEqual({ a: { value: 1 } });
     expect(match([reg("a"), reg("a")], [1, 2])).toBeNull();
   });
 
@@ -169,7 +169,6 @@ describe("match", () => {
       s: {
         value: [1, 2, 3],
         splat: true,
-        eager: false,
       },
     });
 
@@ -177,7 +176,6 @@ describe("match", () => {
       s: {
         value: [2, 3],
         splat: true,
-        eager: false,
       },
     });
 
@@ -185,7 +183,6 @@ describe("match", () => {
       s: {
         value: [],
         splat: true,
-        eager: false,
       },
     });
 
@@ -193,7 +190,6 @@ describe("match", () => {
       s: {
         value: [],
         splat: true,
-        eager: false,
       },
     });
   });

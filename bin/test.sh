@@ -18,10 +18,12 @@ SUCCESS_COUNT=0
 FAILURE_COUNT=0
 for TEST_PROGRAM in ${TEST_PROGRAMS[@]}; do
   echo "Testing $TEST_PROGRAM..."
-  pnpm run pc $TEST_PROGRAM
+  set +e
+  pnpm run --silent pc $TEST_PROGRAM > /dev/null 2>&1
+  STATUS=$?
+  set -e
 
   # Tests are considered passing if the exit status is 0.
-  STATUS=$?
   if [ $STATUS -ne 0 ]; then
     >&2 echo "Error: test failed: $TEST_PROGRAM"
 

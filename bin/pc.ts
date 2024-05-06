@@ -95,10 +95,13 @@ async function main() {
     }
 
     // Otherwise, by default we print the final result.
-    console.info(`${BIN}:`, result);
+    if (typeof result !== "undefined") {
+      console.info(`${BIN}:`, result);
+    }
 
+    // Optionally show all derivations.
     if (showDerivation) {
-      console.info(`${BIN}: derivations:`, context.derivations);
+      console.info(`${BIN}: derivations:\n  ${context.derivations.join("\n  ")}`);
     }
 
     debug && console.debug(`${BIN}: done.`);

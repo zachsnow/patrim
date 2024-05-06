@@ -206,7 +206,7 @@ export function match(pattern: unknown, input: unknown): Rule.Bindings | null {
   function match(pattern: unknown, input: unknown, bindings: Rule.Bindings): boolean {
     // Dereference the already-bound registers.
     if (pattern instanceof Register) {
-      pattern = bindings[pattern.name]?.value ?? rule;
+      pattern = bindings[pattern.name]?.value ?? pattern;
     }
 
     // If the rule is an unbound register, bind it.
@@ -214,8 +214,10 @@ export function match(pattern: unknown, input: unknown): Rule.Bindings | null {
       if (pattern.match(input)) {
         bindings[pattern.name] = {
           value: input,
-          eager: pattern.kind === "eager",
         };
+        if (pattern.kind === "eager") {
+          bindings[pattern.name].eager = true;
+        }
         return true;
       }
       return false;
@@ -255,9 +257,11 @@ export function match(pattern: unknown, input: unknown): Rule.Bindings | null {
               assert(i === pattern.length - 1, "splat must be last element in array");
               bindings[r.name] = {
                 value: input.slice(i),
-                eager: r.kind === "eager",
                 splat: true,
               };
+              if (r.kind === "eager") {
+                bindings[r.name].eager = true;
+              }
               splat = true;
               break;
             }
@@ -287,7 +291,7 @@ export function match(pattern: unknown, input: unknown): Rule.Bindings | null {
             return false;
           }
           for (const key in pattern) {
-            if (!match((rule as any)[key], (input as any)[key], bindings)) {
+            if (!match((pattern as any)[key], (input as any)[key], bindings)) {
               return false;
             }
           }
