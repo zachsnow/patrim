@@ -10,8 +10,8 @@ objects, and allows "extern" calls to existing Javascript functions.
 For instance, this program:
 
 ```
-<> (fac 0) 1
-<> (fac ?n:number) (?n * (fac (?n - 1)))
+:: (fac 0) 1
+:: (fac ?n:number) (?n * (fac (?n - 1)))
 The factorial of 3 is (fac 3)
 ```
 
