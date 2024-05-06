@@ -16,7 +16,7 @@ process.on("uncaughtException", (err) => {
 });
 
 async function startRepl(debug: boolean, context: Context) {
-  debug && console.debug(`${BIN}: repl starting...`);
+  debug && console.debug(`${BIN}: starting interactive mode...`);
   const server = start({
     prompt: `? `,
     eval: (cmd, ctx, filename, callback) => {
@@ -31,7 +31,7 @@ async function startRepl(debug: boolean, context: Context) {
   });
   const promise = new Promise<void>((resolve) => {
     server.on("exit", () => {
-      debug && console.debug(`${BIN}: repl exiting...`);
+      debug && console.debug(`${BIN}: interactive mode exiting...`);
       resolve();
     });
   });
@@ -44,7 +44,7 @@ async function main() {
 
   const noPrelude = args.includes("--no-prelude");
   const debug = args.includes("--debug");
-  const repl = args.includes("--repl");
+  const interactive = args.includes("--interactive");
   const noDefaultBuiltins = args.includes("--no-default-builtins");
   const noBuiltins = args.includes("--no-builtins");
   const showDerivation = args.includes("--show-derivation");
@@ -60,7 +60,7 @@ async function main() {
   args = args.filter((arg) => !arg.startsWith("--"));
 
   // If no files are provided and we aren't entering a repl, print usage and exit.
-  if (args.length === 0 && !repl) {
+  if (args.length === 0 && !interactive) {
     console.info(`${BIN}: no files to read.`);
     console.info("usage: pc [--no-prelude] <file1> <file2> ...");
     process.exit(-1);
@@ -84,12 +84,12 @@ async function main() {
     const program = parse(content);
     debug && console.debug(`${BIN}: parsed program:`, program);
 
-    // Create a context so we can pass it to the repl.
+    // Create a context so we can pass it to interactive mode if needed; that way
+    // rules defined in the program can be used interactively.
     const context = new Context(noBuiltins ? [] : noDefaultBuiltins ? CoreBuiltins : Builtins);
     const result = execute(program, context);
 
-    // Run the repl if --repl is passed.
-    if (repl) {
+    if (interactive) {
       await startRepl(debug, context);
       return;
     }
