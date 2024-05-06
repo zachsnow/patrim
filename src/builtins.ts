@@ -39,6 +39,17 @@ export const CoreBuiltins: Rule[] = [
       },
       [reg("pattern"), reg("replacement")],
     ],
+    "#add-rule",
+  ),
+  rule(
+    ["#add-rule", reg("pattern"), reg("replacement"), reg("name", "string")],
+    [
+      function (this: Context, pattern: unknown, replacement: unknown, name: string) {
+        return this.addRule(pattern, replacement, name);
+      },
+      [reg("pattern"), reg("replacement"), reg("name")],
+    ],
+    "#add-rule (named)",
   ),
   rule(
     ["#remove-rule", reg("rule", undefined, false, "eager")],
@@ -48,15 +59,20 @@ export const CoreBuiltins: Rule[] = [
       },
       [reg("rule")],
     ],
+    "#remove-rule",
   ),
 
   // Access to the evaluation context.
-  rule("#context", [
-    function (this: Context) {
-      return this;
-    },
-    [],
-  ]),
+  rule(
+    "#context",
+    [
+      function (this: Context) {
+        return this;
+      },
+      [],
+    ],
+    "#context",
+  ),
 
   rule(
     ["#exit", reg("n", "number")],
@@ -66,6 +82,7 @@ export const CoreBuiltins: Rule[] = [
       },
       [reg("n")],
     ],
+    "#exit",
   ),
 ];
 
@@ -92,6 +109,7 @@ const ObjectBuiltins: Rule[] = [
       reg("key", undefined, undefined, "eager"),
     ],
     [(object: any, key: any) => object[key], [reg("object"), reg("key")]],
+    "#get",
   ),
 
   rule(
@@ -108,6 +126,7 @@ const ObjectBuiltins: Rule[] = [
       },
       [reg("object"), reg("key"), reg("value")],
     ],
+    "#set",
   ),
 
   constant("#global", globalThis),

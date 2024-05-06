@@ -47,6 +47,7 @@ async function main() {
   const repl = args.includes("--repl");
   const noDefaultBuiltins = args.includes("--no-default-builtins");
   const noBuiltins = args.includes("--no-builtins");
+  const showDerivation = args.includes("--show-derivation");
 
   if (debug) {
     console.debug(`${BIN}: debug mode enabled`);
@@ -95,6 +96,10 @@ async function main() {
 
     // Otherwise, by default we print the final result.
     console.info(`${BIN}:`, result);
+
+    if (showDerivation) {
+      console.info(`${BIN}: derivations:`, context.derivations);
+    }
 
     debug && console.debug(`${BIN}: done.`);
     process.exit(0);

@@ -1,6 +1,20 @@
 import { Register } from "./parse";
 import { assert, isSimpleObject, SimpleObject } from "./util";
 
+/**
+ *
+ */
+class Derivation {
+  public readonly rules: Rule[] = [];
+  public extend = (rule: Rule) => {
+    this.rules.push(rule);
+  };
+
+  public toString(): string {
+    return this.rules.map((rule) => rule.name).join(" -> ");
+  }
+}
+
 export namespace Context {
   /**
    * Reduction strategies.
@@ -14,6 +28,8 @@ export namespace Context {
 export class Context {
   /** The current set of rewrite rules. */
   public readonly rules: Rule[];
+
+  public readonly derivations: Derivation[] = [];
 
   constructor(
     /** The current set of rewrite rules. */
@@ -73,6 +89,17 @@ export class Context {
     return false;
   };
 
+  public newDerivation = () => {
+    this.derivations.push(new Derivation());
+  };
+
+  public extendDerivation = (rule: Rule) => {
+    if (this.derivations.length === 0) {
+      this.derivations.push(new Derivation());
+    }
+    this.derivations[this.derivations.length - 1].extend(rule);
+  };
+
   public toString(): string {
     return "Context";
   }
@@ -103,7 +130,7 @@ export class Rule {
   constructor(
     public readonly pattern: unknown,
     public readonly replacement: Rule.Replacement,
-    public readonly name?: string,
+    public readonly name: string,
   ) {}
 
   public match(input: unknown): Rule.Bindings | null {
@@ -139,7 +166,7 @@ export class Rule {
  */
 
 export const rule = (pattern: unknown, replacement: unknown, name?: string) =>
-  new Rule(pattern, { type: "term", term: replacement }, name);
+  new Rule(pattern, { type: "term", term: replacement }, name ?? `${pattern}`);
 
 /**
  * Helper to create a rule that matches the given `pattern` and invokes the given `builtin`.
@@ -150,16 +177,18 @@ export const rule = (pattern: unknown, replacement: unknown, name?: string) =>
  * @returns a `Rule` instance
  */
 export const builtin = (pattern: unknown, builtin: Rule.Builtin, name?: string) =>
-  new Rule(pattern, { type: "builtin", builtin }, name);
+  new Rule(pattern, { type: "builtin", builtin }, name ?? `${pattern}`);
 
 /**
  * Helper to create a rule that rewrites the given `name` to be the given `value`.
  *
  * @param name the string to match
  * @param value the value to replace the string with
+ * @param derivationName the name to use in derivations; defaults to `name`
  * @returns a `Rule` instance
  */
-export const constant = (name: string, value: unknown) => rule(name, [() => value, []], name);
+export const constant = (name: string, value: unknown, derivationName?: string) =>
+  rule(name, [() => value, []], derivationName ?? name);
 
 /**
  * Given a `pattern` and an `input`, attempts to match the input against the pattern.
@@ -423,6 +452,9 @@ export const evaluateTerm = (input: unknown, context: Context): unknown => {
 
           // Instantiate the replacement using the (potentially evaluated) bindings.
           const replacement = rule.evaluate(bindings, context);
+
+          // Record the derivation.
+          context.extendDerivation(rule);
 
           // Referentially replace the matched term with the replacement.
           if (location) {
