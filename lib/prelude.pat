@@ -16,6 +16,6 @@
 :: (assert !test) (assertAux ?test)
 :: (assertAux true) ()
 :: (assertAux false) (#throw "Assertion failed.")
+:: (assertAux ?test) (#throw "Invalid assertion: expected boolean")
 
-:: (deny false) ()
-:: (deny true) (#throw "Assertion failed.")
+:: (deny !test) (assert (! ?test))
