@@ -14,6 +14,10 @@ const binaryEagerOperator = (op: string, fn: (a: any, b: any) => any): Rule => {
   );
 };
 
+const unaryEagerOperator = (op: string, fn: (a: any) => any): Rule => {
+  return rule([op, reg("a", undefined, undefined, "eager")], [fn, [reg("a")]], op);
+};
+
 /**
  * The core builtins that implement adding/removing rules and interacting with
  * external JS functions.
@@ -97,11 +101,16 @@ const OperatorBuiltins: Rule[] = [
   binaryEagerOperator("!=", (a, b) => a != b),
 
   // Arithmetic.
-  binaryNumericOperator("+", (a, b) => a + b),
+  binaryEagerOperator("+", (a, b) => a + b),
   binaryNumericOperator("-", (a, b) => a - b),
   binaryNumericOperator("*", (a, b) => a * b),
   binaryNumericOperator("/", (a, b) => a / b),
   binaryNumericOperator("%", (a, b) => a % b),
+
+  unaryEagerOperator("+", (a) => +a),
+  unaryEagerOperator("-", (a) => -a),
+  unaryEagerOperator("!", (a) => !a),
+  unaryEagerOperator("~", (a) => ~a),
 ];
 
 const ObjectBuiltins: Rule[] = [
