@@ -24,7 +24,10 @@ export const CoreBuiltins: Rule[] = [
     [reg("fn", "function"), reg("args", "array")],
     function (this: Context, bindings: Rule.Bindings) {
       const fn = bindings.fn?.value;
-      assert(typeof fn === "function");
+
+      // `fn` should be a function due to the register requiring a function type.
+      assert(typeof fn === "function", "expected function");
+
       return fn.apply(this, bindings.args.value);
     },
     "call",

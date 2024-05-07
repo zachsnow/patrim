@@ -76,7 +76,9 @@ export class Register {
         case "undefined":
           return this.type === type;
         case "object":
-          assert(input !== undefined);
+          // Typescript doesn't narrow `input` because we saved it in a variable.
+          assert(input !== undefined, "expected input");
+
           if (input === null) {
             return this.type === "null";
           }
