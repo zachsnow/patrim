@@ -9,6 +9,9 @@
 :: (!l . ?r:string) (#get ?l ?r) "object . property"
 :: (!l . ?r:number) (#get ?l ?r) "object . number"
 
+// Sequencing.
+:: (!l ; ?*rest) (?*rest)
+
 // Test functions.
 :: (assert !test) (assertAux ?test)
 :: (assertAux true) ()
