@@ -16,6 +16,7 @@ export { parse } from "./parse";
 export const evaluate = (program: Program, context?: Context): unknown[] => {
   const c = context ?? new Context(Builtins);
   return program.map((term) => {
+    c.resetIteration();
     c.newDerivation();
     return evaluateTerm(term, c);
   });

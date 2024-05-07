@@ -3,10 +3,15 @@ import { Register } from "./parse";
 import { assert, isSimpleObject, SimpleObject } from "./util";
 
 /**
+ * An evaluation derivation that tracks each rule that was applied
+ * to the input, in order.
  *
+ * TODO: track intermediate terms; since the input is mutated, we can't
+ * just keep a reference.
  */
 class Derivation {
   public readonly rules: Rule[] = [];
+
   public extend = (rule: Rule) => {
     this.rules.push(rule);
   };
@@ -49,7 +54,7 @@ export class Context {
   }
 
   /**
-   * Adds a new term rule.
+   * Add a new term rule.
    *
    * @param pattern
    * @param replacement
@@ -67,7 +72,7 @@ export class Context {
   };
 
   /**
-   * Removes the given `rule` (either by reference or by name).
+   * Remove the given `rule` (either by reference or by name).
    *
    * @param rule either a `Rule` instance or the name of a rule
    * @returns `true` if the rule was removed, `false` otherwise
@@ -94,6 +99,13 @@ export class Context {
   };
 
   /**
+   * Reset the current iteration count.
+   */
+  public resetIteration = () => {
+    this.iteration = 0;
+  };
+
+  /**
    * Begin a new derivation.
    */
   public newDerivation = () => {
@@ -112,10 +124,6 @@ export class Context {
     }
     this.derivations[this.derivations.length - 1].extend(rule);
   };
-
-  public toString(): string {
-    return "Context";
-  }
 }
 
 export namespace Rule {
