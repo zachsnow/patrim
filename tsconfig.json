@@ -9,7 +9,10 @@
     "resolveJsonModule": true,
     "isolatedModules": true,
     "sourceMap": true,
-    "outDir": "dist",
-    "target": "ES2015"
-  }
+    "rootDir": ".",
+    "outDir": "build",
+    "target": "es6",
+    "lib": ["es6"]
+  },
+  "include": ["./src/**/*.ts", "./bin/**/*.ts"]
 }

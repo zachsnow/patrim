@@ -4,8 +4,8 @@
   "scripts": {
     "format": "prettier --ignore-unknown --cache --write .",
     "lint": "eslint . --ext .ts,.tsx --cache",
-    "types": "./node_modules/.bin/tsc --noEmit",
-    "build": "./node_modules/.bin/tsc",
+    "types": "tsc --noEmit",
+    "build": "./build.sh",
     "test": "jest --env=node --colors && ./bin/test.sh",
     "pc": "ts-node ./bin/pc.ts"
   },
@@ -31,6 +31,6 @@
   ],
   "exclude": [
     "node_modules",
-    "dist"
+    "build"
   ]
 }
