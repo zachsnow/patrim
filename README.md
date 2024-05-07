@@ -64,3 +64,7 @@ patrim ? :: hello "Hello, world!"
 ```
 
 For complete usage information, use `pnpm run pc --help`.
+
+## VS Code integration
+
+See [patrim-vscode](https://github.com/zachsnow/patrim-vscode) for VS Code integration.
