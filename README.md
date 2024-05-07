@@ -2,43 +2,63 @@
 
 _Sa souvraya niende misain ye._
 
-Patrim is a goofy little term rewriting language, inspired by [Modal](https://wiki.xxiivv.com/site/modal).
-Unlike the minimal and beautiful Modal, however, this implementation is intended to integrate
-reasonably well with Javascript. It supports the various Javascript primitives, arrays, and
-objects, and allows "extern" calls to existing Javascript functions.
+[Patrim](https://patrim.vein.io) is a goofy little term rewriting language, implemented
+in Typescript. Patrim was inspired by [Modal](https://wiki.xxiivv.com/site/modal).
+Complete documentation is available at the [Patrim website](https://patrim.vein.io).
 
-For instance, this program:
+## Example
 
-```
-:: (fac 0) 1
-:: (fac ?n:number) (?n * (fac (?n - 1)))
-The factorial of 3 is (fac 3)
-```
-
-Evaluates to:
+A simple program that prints "Hello, world!" 3 time:
 
 ```
-The factorial of 3 is 6
+// Define a symbol for the string "Hello, world!"
+:: hello "Hello, world!"
+
+// Repeat something `n` times.
+:: (repeat 0 ?s) undefined
+:: (repeat ?n:number ?s) (
+  ?s ;
+  repeat (?n - 1) ?s
+)
+
+// Define a shorthand for calling `console.info`. Note that `print` matches
+// its argument eagerly.
+:: (print !s) (((#global . console) . info) (?s))
+
+repeat 3 (print hello)
+```
+
+Evaluating the program:
+
+```
+$ pnpm run pc hello.pat
+
+Hello, world!
+Hello, world!
+Hello, world!
+```
+
+## Installation
+
+```
+cd patrim
+pnpm i
 ```
 
 ## Usage
 
-To evaluate the contents of a file, use `pc`:
+To evaluate the contents of a file or files, use `pc`:
 
 ```
-$ pnpm run pc <file>
+$ pnpm run pc <file> <file> ...
 ```
 
-The resulting rewritten term will be printed to `stdout`.
+The resulting rewritten term will be printed to `stdout`. Pass `--interactive` to open
+a REPL after evaluating the given files, if any:
 
-## Syntax
+```
+$ pnpm run pc --interactive
+patrim ? ::
+```
 
-The syntax of Patrim is generally inspired by Modal's but adds support for various Javascript
-values -- numbers, quoted strings, `true`, `false`, `null`, `undefined`.
-
-## Registers
-
-Like Modal, rules can contain _registers_ that bind subterms. By default, simple registers (of the
-form `?a` or `?foo`, for instance) match any term. They can be restricted to instead match only
-terms of a particular primitive type -- `?n:number` -- or terms of a particular prototype --
-`?node:DOMNode`.
+For complete usage information, use `pnpm run pc --help`.
