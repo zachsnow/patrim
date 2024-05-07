@@ -3,12 +3,14 @@
 _Sa souvraya niende misain ye._
 
 [Patrim](https://patrim.vein.io) is a goofy little term rewriting language, implemented
-in Typescript. Patrim was inspired by [Modal](https://wiki.xxiivv.com/site/modal).
-Complete documentation is available at the [Patrim website](https://patrim.vein.io).
+in Typescript. Incomplete documentation is available at the
+[Patrim website](https://patrim.vein.io).
+
+Patrim was inspired by [Modal](https://wiki.xxiivv.com/site/modal).
 
 ## Example
 
-A simple program that prints "Hello, world!" 3 time:
+A simple program that prints "Hello, world!" 3 times:
 
 ```
 // Define a symbol for the string "Hello, world!"
@@ -58,7 +60,7 @@ a REPL after evaluating the given files, if any:
 
 ```
 $ pnpm run pc --interactive
-patrim ? ::
+patrim ? :: hello "Hello, world!"
 ```
 
 For complete usage information, use `pnpm run pc --help`.
