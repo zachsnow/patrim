@@ -1,4 +1,4 @@
-#add-rule (// ?*rest) ()
+#add-rule (// ?*rest) undefined
 // ^ A nicer syntax for comments.
 
 // A nicer syntax for defining rules.
