@@ -269,6 +269,12 @@ export class Tokenizer {
   public next(): void {
     this.index++;
   }
+
+  public skip(token: Token): void {
+    while (this.current === token) {
+      this.next();
+    }
+  }
 }
 
 /**
@@ -288,10 +294,8 @@ export class ParseError extends Error {
  * @returns the parsed `Term`
  */
 const parseTerm = (tokenizer: Tokenizer): Term => {
-  // Skip newlines within terms.
-  while (tokenizer.current === EndOfLine) {
-    tokenizer.next();
-  }
+  // Skip leading newlines.
+  tokenizer.skip(EndOfLine);
 
   switch (tokenizer.current) {
     case BeginTerm:
@@ -299,6 +303,9 @@ const parseTerm = (tokenizer: Tokenizer): Term => {
       const term = [];
       while ((tokenizer.current as Token) !== EndTerm) {
         term.push(parseTerm(tokenizer));
+
+        // Skip trailing newlines between terms.
+        tokenizer.skip(EndOfLine);
       }
       tokenizer.next();
       return term;
