@@ -29,6 +29,9 @@ export class Context {
   /** The current set of rewrite rules. */
   public readonly rules: Rule[];
 
+  /**
+   * All derivations that have been performed in this context.
+   */
   public readonly derivations: Derivation[] = [];
 
   constructor(
@@ -89,10 +92,19 @@ export class Context {
     return false;
   };
 
+  /**
+   * Begin a new derivation.
+   */
   public newDerivation = () => {
     this.derivations.push(new Derivation());
   };
 
+  /**
+   * Extend the current derivation with the given `rule`; this should be called
+   * when a rule is evaluated.
+   *
+   * @param rule
+   */
   public extendDerivation = (rule: Rule) => {
     if (this.derivations.length === 0) {
       this.derivations.push(new Derivation());
