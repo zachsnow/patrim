@@ -1,5 +1,8 @@
 import * as fs from "fs";
+import { parseArgs } from "util";
+
 import path from "path";
+import { env } from "process";
 import { start } from "repl";
 import { Context, execute, parse } from "../src";
 import { Builtins, CoreBuiltins } from "../src/builtins";
@@ -38,36 +41,104 @@ async function startRepl(debug: boolean, context: Context) {
   return promise;
 }
 
-async function main() {
+const parseArgsConfig = {
   // Exclude the first two arguments: node and the script itself.
-  let args = process.argv.slice(2);
+  args: process.argv.slice(2),
+  options: {
+    interactive: {
+      type: "boolean",
+      default: false,
+      short: "i",
+      description: "start an interactive session",
+    },
+    showDerivation: {
+      type: "boolean",
+      default: false,
+      description: "show final derivation",
+    },
+    noPrelude: {
+      type: "boolean",
+      default: false,
+      description: "do not include the prelude",
+    },
+    noBuiltins: {
+      type: "boolean",
+      default: false,
+      description: "do not include built-in rules",
+    },
+    debug: {
+      type: "boolean",
+      default: false,
+      description: "enable debug mode",
+    },
+    version: {
+      type: "boolean",
+      default: false,
+      short: "v",
+      description: "show version information",
+    },
+    help: {
+      type: "boolean",
+      description: "show this help message",
+    },
+  },
+  allowPositionals: true,
+} as const;
 
-  const noPrelude = args.includes("--no-prelude");
-  const debug = args.includes("--debug");
-  const interactive = args.includes("--interactive");
-  const noDefaultBuiltins = args.includes("--no-default-builtins");
-  const noBuiltins = args.includes("--no-builtins");
-  const showDerivation = args.includes("--show-derivation");
+function help() {
+  console.info(`Usage: ${BIN} [options] <file>...`);
+  console.info(`Options:`);
+  Object.entries(parseArgsConfig.options).forEach(([name, option]) => {
+    const short = "short" in option ? `-${option.short}, ` : "";
+    const prefix = `  ${short}--${name}`;
+    console.info(`${prefix}${" ".repeat(26 - prefix.length)}${option.description ?? ""}`);
+  });
+  console.info("");
+}
 
+function parseOptions() {
+  return parseArgs(parseArgsConfig);
+}
+
+function version() {
+  const version = env.npm_package_version;
+  console.info(`${BIN}: version ${version ?? "unknown"}`);
+}
+
+async function main(): Promise<number | undefined> {
+  const allOptions = parseOptions();
+  const options = allOptions.values;
+  const filenames = allOptions.positionals;
+
+  const debug = options.debug ?? false;
   if (debug) {
     console.debug(`${BIN}: debug mode enabled`);
   }
-  if (noPrelude) {
+  if (options.noPrelude) {
     debug && console.debug(`${BIN}: skipping prelude...`);
   }
 
-  // Get passed filenames.
-  args = args.filter((arg) => !arg.startsWith("--"));
+  if (options.help) {
+    help();
+    return;
+  }
+
+  if (options.version) {
+    version();
+    return;
+  }
 
   // If no files are provided and we aren't entering a repl, print usage and exit.
-  if (args.length === 0 && !interactive) {
-    console.info(`${BIN}: no files to read.`);
-    console.info("usage: pc [--no-prelude] <file1> <file2> ...");
-    process.exit(-1);
+  if (filenames.length === 0 && !options.interactive) {
+    console.error(`${BIN}: no files to read.`);
+    help();
+    return -1;
   }
 
   // Include the prelude unless --no-prelude is passed.
-  const filenames = noPrelude ? args : [path.join(__dirname, "../lib/prelude.pat"), ...args];
+  if (!options.noPrelude) {
+    filenames.unshift(path.join(__dirname, "../lib/prelude.pat"));
+  }
 
   // Read all files and concatenate them into a single program.
   const content = filenames
@@ -86,10 +157,13 @@ async function main() {
 
     // Create a context so we can pass it to interactive mode if needed; that way
     // rules defined in the program can be used interactively.
-    const context = new Context(noBuiltins ? [] : noDefaultBuiltins ? CoreBuiltins : Builtins);
+    if (options.noBuiltins) {
+      debug && console.debug(`${BIN}: skipping builtins...`);
+    }
+    const context = new Context(options.noBuiltins ? CoreBuiltins : Builtins);
     const result = execute(program, context);
 
-    if (interactive) {
+    if (options.interactive) {
       await startRepl(debug, context);
       return;
     }
@@ -100,16 +174,23 @@ async function main() {
     }
 
     // Optionally show all derivations.
-    if (showDerivation) {
+    if (options.showDerivation) {
       console.info(`${BIN}: derivations:\n  ${context.derivations.join("\n  ")}`);
     }
 
     debug && console.debug(`${BIN}: done.`);
-    process.exit(0);
+    return;
   } catch (e) {
     console.error(`${BIN}: error:`, e);
-    process.exit(-1);
+    return -1;
   }
 }
 
-main();
+main()
+  .then((i) => {
+    process.exit(i ?? 0);
+  })
+  .catch((e) => {
+    console.error(`${BIN}: unhandled error:`, e);
+    process.exit(-1);
+  });

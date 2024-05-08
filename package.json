@@ -1,6 +1,7 @@
 {
   "private": true,
   "name": "patrim",
+  "version": "0.0.1",
   "scripts": {
     "format": "prettier --ignore-unknown --cache --write .",
     "lint": "eslint . --ext .ts,.tsx --cache",
