@@ -1,6 +1,16 @@
 import { execute } from ".";
 import { Context, instantiate, match, rule, subterms } from "./evaluate";
-import { BeginList, EndList, EndOfInput, EndOfLine, lex, parse, reg } from "./parse";
+import {
+  BeginList,
+  BeginObject,
+  EndList,
+  EndObject,
+  EndOfInput,
+  EndOfLine,
+  lex,
+  parse,
+  reg,
+} from "./parse";
 
 const collect = (term: unknown, strategy?: Context.Strategy): unknown[] => {
   return Array.from(subterms(term, new Context([], strategy))).map((subterm) => subterm.term);
@@ -16,6 +26,14 @@ describe("lex", () => {
     expect(lex("1 \t 2")).toEqual([1, 2, EndOfInput]);
     expect(lex("hi")).toEqual(["hi", EndOfInput]);
     expect(lex("1 ( hi ?r a)")).toEqual([1, BeginList, "hi", reg("r"), "a", EndList, EndOfInput]);
+    expect(lex("true { foo baz }")).toEqual([
+      true,
+      BeginObject,
+      "foo",
+      "baz",
+      EndObject,
+      EndOfInput,
+    ]);
     expect(lex("(1)\n")).toEqual([BeginList, 1, EndList, EndOfLine, EndOfInput]);
     expect(lex("(1 hello)")).toEqual([BeginList, 1, "hello", EndList, EndOfInput]);
     expect(lex("true")).toEqual([true, EndOfInput]);

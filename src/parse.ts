@@ -174,8 +174,12 @@ export const lex = (input: string): Token[] => {
       return SyntaxTokens[token];
     }
 
-    // We trim the token and discard it if it's empty *after* checking for syntax tokens,
-    // so that we don't miss `EndOfLine`.
+    // Newlines are sometimes significant.
+    if (token.includes("\n")) {
+      return EndOfLine;
+    }
+
+    // Discard non-significant whitespace.
     token = token.trim();
     if (!token) {
       return Ignore;
@@ -252,6 +256,9 @@ export class Tokenizer {
   private index: number = 0;
   constructor(private tokens: Token[]) {}
 
+  /**
+   * The current token; if the tokenizer is at or passed the end of input, returns `EndOfInput`.
+   */
   public get current(): Token {
     if (this.index >= this.tokens.length) {
       return EndOfInput;
@@ -259,14 +266,35 @@ export class Tokenizer {
     return this.tokens[this.index];
   }
 
-  public next(): void {
+  private next(): void {
     this.index++;
   }
 
+  /**
+   * Advance to the next token that does not match the given `token`.
+   * @param token
+   */
   public skip(token: Token): void {
     while (this.current === token) {
       this.next();
     }
+  }
+
+  /**
+   * Consume and return the current token; advances to the next token. Optionally ensures
+   * that the current token matches the given `token`, and raises `ParseError` if it does not.
+   *
+   * @param token the optional token to match
+   * @returns the current token
+   */
+  public consume(token?: Token): Token {
+    // We can't consume `undefined` explicitly but we don't need to, so oh well.
+    const current = this.current;
+    if (token !== undefined && current !== token) {
+      throw new ParseError(`expected ${String(token)}`);
+    }
+    this.next();
+    return current;
   }
 }
 
@@ -290,9 +318,32 @@ const parseTerm = (tokenizer: Tokenizer): Term => {
   // Skip leading newlines.
   tokenizer.skip(EndOfLine);
 
-  switch (tokenizer.current) {
-    case BeginList:
-      tokenizer.next();
+  const token = tokenizer.consume();
+  switch (token) {
+    case BeginObject: {
+      const term: { [K: string]: Term } = {};
+      while ((tokenizer.current as Token) !== EndObject) {
+        tokenizer.skip(EndOfLine);
+
+        // Parse a key-value pair.
+        const key = tokenizer.consume();
+        if (typeof key !== "string") {
+          throw new ParseError("expected string key in object");
+        }
+        const value = parseTerm(tokenizer);
+        term[key] = value;
+
+        // Skip trailing newlines between key-value pairs.
+        tokenizer.skip(EndOfLine);
+      }
+
+      // Discard the trailing `}` and advance.
+      tokenizer.consume();
+      return term;
+    }
+    case EndObject:
+      throw new ParseError("unexpected '}'");
+    case BeginList: {
       const term = [];
       while ((tokenizer.current as Token) !== EndList) {
         term.push(parseTerm(tokenizer));
@@ -300,15 +351,16 @@ const parseTerm = (tokenizer: Tokenizer): Term => {
         // Skip trailing newlines between terms.
         tokenizer.skip(EndOfLine);
       }
-      tokenizer.next();
+
+      // Discard the trailing `)` and advance.
+      tokenizer.consume();
       return term;
+    }
     case EndList:
       throw new ParseError("unexpected ')'");
     case EndOfInput:
       throw new ParseError("unexpected end of input");
     default:
-      const token = tokenizer.current;
-      tokenizer.next();
       return token;
   }
 };
@@ -322,14 +374,18 @@ const parseLine = (tokenizer: Tokenizer): Term => {
   const terms: Term[] = [];
   while (true) {
     switch (tokenizer.current) {
+      case BeginObject:
       case BeginList:
         terms.push(parseTerm(tokenizer));
         break;
+      case EndObject:
+        throw new ParseError("unexpected '}'");
       case EndList:
         throw new ParseError("unexpected ')'");
       case EndOfLine:
       case EndOfInput:
-        tokenizer.next();
+        tokenizer.consume();
+
         // Unwrap single terms automatically, so that e.g.
         // (1) parses to 1 and not [1].
         if (terms.length === 1) {
@@ -339,7 +395,8 @@ const parseLine = (tokenizer: Tokenizer): Term => {
         return terms;
       default:
         terms.push(tokenizer.current);
-        tokenizer.next();
+        tokenizer.consume();
+        break;
     }
   }
 };
@@ -348,9 +405,7 @@ const parseProgram = (tokenizer: Tokenizer): Program => {
   const program: Term[] = [];
   while (true) {
     // Skip empty lines.
-    while ((tokenizer.current as Token) === EndOfLine) {
-      tokenizer.next();
-    }
+    tokenizer.skip(EndOfLine);
 
     // If we are out of input, we don't want to push an empty term.
     if (tokenizer.current === EndOfInput) {
