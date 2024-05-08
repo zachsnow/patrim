@@ -162,7 +162,7 @@ const SyntaxTokens: Record<string, Token> = {
 export const lex = (input: string): Token[] => {
   const Ignore = Symbol("Ignore");
 
-  const matches = input.match(/\(|\)|"[^"\\]*(?:\\[\s\S][^"\\]*)*"|[^\s\(\)]+|\s+/g) || [];
+  const matches = input.match(/[{}()]|"[^"\\]*(?:\\[\s\S][^"\\]*)*"|[^\s\(\)]+|\s+/g) || [];
   const tokens: (Token | typeof Ignore)[] = matches.map((token) => {
     // Ignore undefined matches.
     if (!token) {
@@ -321,10 +321,10 @@ const parseTerm = (tokenizer: Tokenizer): Term => {
   const token = tokenizer.consume();
   switch (token) {
     case BeginObject: {
+      tokenizer.skip(EndOfLine);
+
       const term: { [K: string]: Term } = {};
       while ((tokenizer.current as Token) !== EndObject) {
-        tokenizer.skip(EndOfLine);
-
         // Parse a key-value pair.
         const key = tokenizer.consume();
         if (typeof key !== "string") {
@@ -344,6 +344,8 @@ const parseTerm = (tokenizer: Tokenizer): Term => {
     case EndObject:
       throw new ParseError("unexpected '}'");
     case BeginList: {
+      tokenizer.skip(EndOfLine);
+
       const term = [];
       while ((tokenizer.current as Token) !== EndList) {
         term.push(parseTerm(tokenizer));

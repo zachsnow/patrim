@@ -68,12 +68,23 @@ describe("parse", () => {
     expect(parse("undefined")).toEqual([undefined]);
   });
 
-  test("structured values", () => {
+  test("lists", () => {
+    expect(parse("()")).toEqual([[]]);
+    expect(parse("(\n)")).toEqual([[]]);
     expect(parse("(1)")).toEqual([[1]]);
     expect(parse("( 1 )")).toEqual([[1]]);
     expect(parse("(1 2)")).toEqual([[1, 2]]);
     expect(parse("(1 \n 2)")).toEqual([[1, 2]]);
     expect(parse("(1 (hello world))")).toEqual([[1, ["hello", "world"]]]);
+  });
+
+  test("objects", () => {
+    expect(parse("{}")).toEqual([{}]);
+    expect(parse("{\n}")).toEqual([{}]);
+    expect(parse("{ a 1 }")).toEqual([{ a: 1 }]);
+    expect(parse("{ a 1 \n b (3 4) }")).toEqual([{ a: 1, b: [3, 4] }]);
+    expect(parse("{ a 1 b 2 }")).toEqual([{ a: 1, b: 2 }]);
+    expect(parse("{ a 1 b { c 2 } }")).toEqual([{ a: 1, b: { c: 2 } }]);
   });
 
   test("whitespace", () => {
@@ -120,6 +131,10 @@ describe("parse", () => {
   test("invalid", () => {
     expect(() => parse("( 1")).toThrow();
     expect(() => parse("1 )")).toThrow();
+    expect(() => parse("1 }")).toThrow();
+    expect(() => parse("{ 1 ")).toThrow();
+    expect(() => parse("{ 1 }")).toThrow();
+    expect(() => parse("{ foo bar baz }")).toThrow();
   });
 });
 
