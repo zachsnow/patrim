@@ -1,10 +1,17 @@
 import { assert, isSimpleObject } from "./util";
 
+// TODO: would it be better to just use `[` and `]` for lists?
 /** A token corresponding to a literal "(" */
-export const BeginTerm = Symbol("BeginTerm");
+export const BeginList = Symbol("BeginList");
 
 /** A token corresponding to a literal ")" */
-export const EndTerm = Symbol("EndTerm");
+export const EndList = Symbol("EndList");
+
+/** A token corresponding to a literal "{" */
+export const BeginObject = Symbol("BeginObject");
+
+/** A token corresponding to a literal "}" */
+export const EndObject = Symbol("EndObject");
 
 /** A token corresponding to a literal "\n" */
 export const EndOfLine = Symbol("EndOfLine");
@@ -16,8 +23,10 @@ export const EndOfInput = Symbol("EndOfInput");
  * The (syntactic) type of tokens.
  */
 export type Token =
-  | typeof BeginTerm
-  | typeof EndTerm
+  | typeof BeginList
+  | typeof EndList
+  | typeof BeginObject
+  | typeof EndObject
   | typeof EndOfLine
   | typeof EndOfInput
   | Register
@@ -59,6 +68,9 @@ export class Register {
 
   /**
    * Determines whether this register matches the given `input`.
+   *
+   * TODO: it would be nice if this lived in `evaluation.ts` instead; for now
+   * we conflate parse-time registers and runtime registers.
    *
    * @param input a term to match
    * @returns `true` when the register matches the input; `false` otherwise
@@ -128,11 +140,21 @@ export type Term = Token | Term[] | { [K: string]: Term };
  */
 export type Program = Term[];
 
+const SyntaxTokens: Record<string, Token> = {
+  "(": BeginList,
+  ")": EndList,
+  "{": BeginObject,
+  "}": EndObject,
+  true: true,
+  false: false,
+  null: null,
+  undefined: undefined,
+};
+
 /**
  * Lexes the given `input` string into a list of tokens. These tokens are either JS primitives
  * (e.g. `true`, `false`, strings, numbers, etc.), registers (e.g. `?x`, `!y:number` -- returned
- * as instances of `Register`), or the symbols `BeginTerm` (for "("), `EndTerm` (for ")"), and
- * `EndOfLine` (for newlines).
+ * as instances of `Register`), or unique symbols corresponding to various bits of syntax.
  *
  * @param input
  * @returns Token[]
@@ -147,39 +169,16 @@ export const lex = (input: string): Token[] => {
       return Ignore;
     }
 
-    // Terms.
-    if (token === "(") {
-      return BeginTerm;
-    }
-    if (token === ")") {
-      return EndTerm;
+    // Most syntax (e.g. braces, true, false, etc.)
+    if (token in SyntaxTokens) {
+      return SyntaxTokens[token];
     }
 
-    // We map any whitespace that includes a newline to a single newline;
-    // this allows us to treat top-level newlines specially when parsing.
-    if (token.includes("\n")) {
-      return EndOfLine;
-    }
-
-    // Otherwise, we trim the token and discard it if it's empty.
+    // We trim the token and discard it if it's empty *after* checking for syntax tokens,
+    // so that we don't miss `EndOfLine`.
     token = token.trim();
     if (!token) {
       return Ignore;
-    }
-
-    // Null.
-    if (token === "null") {
-      return null;
-    }
-
-    // Undefined.
-    if (token === "undefined") {
-      return undefined;
-    }
-
-    // Booleans.
-    if (token === "true" || token === "false") {
-      return token === "true";
     }
 
     // Numbers.
@@ -298,10 +297,10 @@ const parseTerm = (tokenizer: Tokenizer): Term => {
   tokenizer.skip(EndOfLine);
 
   switch (tokenizer.current) {
-    case BeginTerm:
+    case BeginList:
       tokenizer.next();
       const term = [];
-      while ((tokenizer.current as Token) !== EndTerm) {
+      while ((tokenizer.current as Token) !== EndList) {
         term.push(parseTerm(tokenizer));
 
         // Skip trailing newlines between terms.
@@ -309,7 +308,7 @@ const parseTerm = (tokenizer: Tokenizer): Term => {
       }
       tokenizer.next();
       return term;
-    case EndTerm:
+    case EndList:
       throw new ParseError("unexpected ')'");
     case EndOfInput:
       throw new ParseError("unexpected end of input");
@@ -329,10 +328,10 @@ const parseLine = (tokenizer: Tokenizer): Term => {
   const terms: Term[] = [];
   while (true) {
     switch (tokenizer.current) {
-      case BeginTerm:
+      case BeginList:
         terms.push(parseTerm(tokenizer));
         break;
-      case EndTerm:
+      case EndList:
         throw new ParseError("unexpected ')'");
       case EndOfLine:
       case EndOfInput:

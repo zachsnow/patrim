@@ -1,6 +1,6 @@
 import { execute } from ".";
 import { Context, instantiate, match, rule, subterms } from "./evaluate";
-import { BeginTerm, EndOfInput, EndOfLine, EndTerm, lex, parse, reg } from "./parse";
+import { BeginList, EndList, EndOfInput, EndOfLine, lex, parse, reg } from "./parse";
 
 const collect = (term: unknown, strategy?: Context.Strategy): unknown[] => {
   return Array.from(subterms(term, new Context([], strategy))).map((subterm) => subterm.term);
@@ -15,9 +15,9 @@ describe("lex", () => {
     expect(lex("1 \n 2")).toEqual([1, EndOfLine, 2, EndOfInput]);
     expect(lex("1 \t 2")).toEqual([1, 2, EndOfInput]);
     expect(lex("hi")).toEqual(["hi", EndOfInput]);
-    expect(lex("1 ( hi ?r a)")).toEqual([1, BeginTerm, "hi", reg("r"), "a", EndTerm, EndOfInput]);
-    expect(lex("(1)\n")).toEqual([BeginTerm, 1, EndTerm, EndOfLine, EndOfInput]);
-    expect(lex("(1 hello)")).toEqual([BeginTerm, 1, "hello", EndTerm, EndOfInput]);
+    expect(lex("1 ( hi ?r a)")).toEqual([1, BeginList, "hi", reg("r"), "a", EndList, EndOfInput]);
+    expect(lex("(1)\n")).toEqual([BeginList, 1, EndList, EndOfLine, EndOfInput]);
+    expect(lex("(1 hello)")).toEqual([BeginList, 1, "hello", EndList, EndOfInput]);
     expect(lex("true")).toEqual([true, EndOfInput]);
     expect(lex("false")).toEqual([false, EndOfInput]);
     expect(lex("null")).toEqual([null, EndOfInput]);
