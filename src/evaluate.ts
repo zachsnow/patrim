@@ -508,3 +508,11 @@ export const evaluateTerm = (input: unknown, context: Context): unknown => {
 
   return input;
 };
+
+export const evaluateTerms = (input: unknown[], context: Context): unknown[] => {
+  return input.map((term) => {
+    context.resetIteration();
+    context.newDerivation();
+    return evaluateTerm(term, context);
+  });
+};

@@ -1,5 +1,6 @@
-import { builtin, constant, Context, evaluateTerm, Rule, rule } from "./evaluate";
-import { reg } from "./parse";
+import fs from "fs";
+import { builtin, constant, Context, evaluateTerm, evaluateTerms, Rule, rule } from "./evaluate";
+import { parse, reg } from "./parse";
 import { assert } from "./util";
 
 const binaryNumericOperator = (op: string, fn: (a: any, b: any) => any): Rule => {
@@ -81,6 +82,17 @@ export const CoreBuiltins: Rule[] = [
     "#context",
   ),
 
+  rule(
+    ["#include", reg("filename", "string")],
+    [
+      function (this: Context, filename: string) {
+        const content = fs.readFileSync(filename, "utf8");
+        const program = parse(content);
+        evaluateTerms(program, this);
+      },
+      [reg("filename")],
+    ],
+  ),
   rule(
     ["#exit", reg("n", "number")],
     [

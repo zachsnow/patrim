@@ -1,5 +1,5 @@
 import { Builtins } from "./builtins";
-import { Context, evaluateTerm } from "./evaluate";
+import { Context, evaluateTerms } from "./evaluate";
 import { Program } from "./parse";
 
 export { Context } from "./evaluate";
@@ -15,11 +15,7 @@ export { parse } from "./parse";
  */
 export const evaluate = (program: Program, context?: Context): unknown[] => {
   const c = context ?? new Context(Builtins);
-  return program.map((term) => {
-    c.resetIteration();
-    c.newDerivation();
-    return evaluateTerm(term, c);
-  });
+  return evaluateTerms(program, c);
 };
 
 /**
