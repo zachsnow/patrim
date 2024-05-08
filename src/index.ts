@@ -27,7 +27,7 @@ export const evaluate = (program: Program, context?: Context): unknown[] => {
  *
  * @param program the program to evaluate
  * @param context the evaluation context
- * @returns the execution result
+ * @returns the final term of the evaluated program
  */
 export const execute = (program: Program, context?: Context): unknown => {
   const evaluated = evaluate(program, context);
