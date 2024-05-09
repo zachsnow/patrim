@@ -24,10 +24,10 @@ async function interactive(context: Context, history?: string) {
   debug && console.debug(`${BIN}: starting interactive mode...`);
   const server = start({
     prompt: `? `,
-    eval: (cmd, ctx, filename, callback) => {
+    eval: async (cmd, ctx, filename, callback) => {
       try {
         const program = parse(cmd);
-        const result = execute(program, context);
+        const result = await execute(program, context);
         callback(null, result);
       } catch (e) {
         if (e instanceof ParseError && e.incomplete) {
@@ -183,7 +183,7 @@ async function main(): Promise<number | undefined> {
       debug && console.debug(`${BIN}: skipping builtins...`);
     }
     const context = new Context(options.noBuiltins ? CoreBuiltins : Builtins);
-    const result = execute(program, context);
+    const result = await execute(program, context);
 
     if (options.interactive) {
       await interactive(context, options.history);

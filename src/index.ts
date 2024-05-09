@@ -13,7 +13,7 @@ export { parse, ParseError } from "./parse";
  * @param context the evaluation context
  * @returns the evaluated program
  */
-export const evaluate = (program: Program, context?: Context): unknown[] => {
+export const evaluate = async (program: Program, context?: Context): Promise<unknown[]> => {
   const c = context ?? new Context(Builtins);
   return evaluateTerms(program, c);
 };
@@ -26,8 +26,8 @@ export const evaluate = (program: Program, context?: Context): unknown[] => {
  * @param context the evaluation context
  * @returns the final term of the evaluated program
  */
-export const execute = (program: Program, context?: Context): unknown => {
-  const evaluated = evaluate(program, context);
+export const execute = async (program: Program, context?: Context): Promise<unknown> => {
+  const evaluated = await evaluate(program, context);
   if (evaluated.length) {
     return evaluated[evaluated.length - 1];
   }

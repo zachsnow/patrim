@@ -460,7 +460,7 @@ export function* subterms(
  * @param context the context to rewrite under
  * @returns the rewritten term
  */
-export const evaluateTerm = (input: unknown, context: Context): unknown => {
+export const evaluateTerm = async (input: unknown, context: Context): Promise<unknown> => {
   for (; context.iteration < context.maxIterations; context.iteration++) {
     let changed = false;
 
@@ -475,7 +475,7 @@ export const evaluateTerm = (input: unknown, context: Context): unknown => {
           // If it does, evaluate any eager bindings.
           for (const key in bindings) {
             if (bindings[key].eager) {
-              bindings[key].value = evaluateTerm(bindings[key].value, context);
+              bindings[key].value = await evaluateTerm(bindings[key].value, context);
             }
           }
 
@@ -509,10 +509,13 @@ export const evaluateTerm = (input: unknown, context: Context): unknown => {
   return input;
 };
 
-export const evaluateTerms = (input: unknown[], context: Context): unknown[] => {
-  return input.map((term) => {
+export const evaluateTerms = async (input: unknown[], context: Context): Promise<unknown[]> => {
+  const result: unknown[] = [];
+  for (const term of input) {
     context.resetIteration();
     context.newDerivation();
-    return evaluateTerm(term, context);
-  });
+    const value = await evaluateTerm(term, context);
+    result.push(value);
+  }
+  return result;
 };
