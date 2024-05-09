@@ -302,7 +302,10 @@ export class Tokenizer {
  * Base type for all parsing errors.
  */
 export class ParseError extends Error {
-  constructor(message: string) {
+  constructor(
+    message: string,
+    public incomplete: boolean = false,
+  ) {
     super(message);
     this.name = "ParseError";
   }
@@ -361,7 +364,7 @@ const parseTerm = (tokenizer: Tokenizer): Term => {
     case EndList:
       throw new ParseError("unexpected ')'");
     case EndOfInput:
-      throw new ParseError("unexpected end of input");
+      throw new ParseError("unexpected end of input", true);
     default:
       return token;
   }

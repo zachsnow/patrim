@@ -1,13 +1,15 @@
-import * as fs from "fs";
-import { parseArgs } from "util";
-
+import fs from "fs";
+import os from "os";
 import path from "path";
 import { env } from "process";
-import { start } from "repl";
-import { Context, execute, parse } from "../src";
+import { Recoverable, start } from "repl";
+import { parseArgs } from "util";
+import { Context, execute, parse, ParseError } from "../src";
 import { Builtins, CoreBuiltins } from "../src/builtins";
 
 const BIN = "patrim cauthon";
+
+let debug = false;
 
 process.on("unhandledRejection", (reason, p) => {
   console.error("${BIN}: unhandled rejection", reason, p);
@@ -18,7 +20,7 @@ process.on("uncaughtException", (err) => {
   process.exit(-1);
 });
 
-async function startRepl(debug: boolean, context: Context) {
+async function interactive(context: Context, history?: string) {
   debug && console.debug(`${BIN}: starting interactive mode...`);
   const server = start({
     prompt: `? `,
@@ -28,10 +30,23 @@ async function startRepl(debug: boolean, context: Context) {
         const result = execute(program, context);
         callback(null, result);
       } catch (e) {
-        callback(e instanceof Error ? e : new Error(`${e}`), null);
+        if (e instanceof ParseError && e.incomplete) {
+          callback(new Recoverable(e), null);
+        } else {
+          callback(e instanceof Error ? e : new Error(`${e}`), null);
+        }
       }
     },
   });
+
+  history ??= path.join(os.homedir(), ".patrim-history");
+  if (history) {
+    debug && console.debug(`${BIN}: loading history from ${history}...`);
+    server.setupHistory(history, () => {
+      debug && console.debug(`${BIN}: history loaded...`);
+    });
+  }
+
   const promise = new Promise<void>((resolve) => {
     server.on("exit", () => {
       debug && console.debug(`${BIN}: interactive mode exiting...`);
@@ -50,6 +65,11 @@ const parseArgsConfig = {
       default: false,
       short: "i",
       description: "start an interactive session",
+    },
+    history: {
+      type: "string",
+      short: "H",
+      description: "path to the history file for interactive mode",
     },
     showDerivation: {
       type: "boolean",
@@ -79,6 +99,8 @@ const parseArgsConfig = {
     },
     help: {
       type: "boolean",
+      default: false,
+      short: "h",
       description: "show this help message",
     },
   },
@@ -110,7 +132,7 @@ async function main(): Promise<number | undefined> {
   const options = allOptions.values;
   const filenames = allOptions.positionals;
 
-  const debug = options.debug ?? false;
+  debug = options.debug ?? false;
   if (debug) {
     console.debug(`${BIN}: debug mode enabled`);
   }
@@ -164,7 +186,7 @@ async function main(): Promise<number | undefined> {
     const result = execute(program, context);
 
     if (options.interactive) {
-      await startRepl(debug, context);
+      await interactive(context, options.history);
       return;
     }
 
