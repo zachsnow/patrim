@@ -187,6 +187,62 @@ const ExceptionBuiltins: Rule[] = [
   ),
 ];
 
+const AsyncBuiltins: Rule[] = [
+  rule(
+    ["#await", reg("promise", "Promise")],
+    [async (promise: Promise<any>) => await promise, [reg("promise")]],
+    "#await",
+  ),
+  rule(
+    ["#wait", reg("ms", "number")],
+    [
+      async (ms: number) => {
+        return new Promise((resolve) => setTimeout(resolve, ms));
+      },
+      [reg("ms")],
+    ],
+    "#wait",
+  ),
+];
+
+const IOBuiltins: Rule[] = [
+  rule(
+    ["#read", reg("filename", "string")],
+    [
+      (filename: string) => {
+        return fs.readFileSync(filename, "utf8");
+      },
+      [reg("filename")],
+    ],
+  ),
+  rule(
+    ["#write", reg("filename", "string"), reg("content", "string")],
+    [
+      (filename: string, content: string) => {
+        return fs.writeFileSync(filename, content);
+      },
+      [reg("filename"), reg("content")],
+    ],
+  ),
+  rule(
+    ["#print", reg("s", undefined, undefined, "eager")],
+    [
+      (s: any) => {
+        console.info(s);
+      },
+      [reg("s")],
+    ],
+  ),
+  rule(
+    ["#input", reg("s", undefined, undefined, "eager")],
+    [
+      (s: string) => {
+        // TODO: we need clean support for promises before this will work.
+      },
+      [reg("s")],
+    ],
+  ),
+];
 /**
  * The default builtins.
  */
@@ -195,4 +251,6 @@ export const Builtins: Rule[] = [
   ...OperatorBuiltins,
   ...ObjectBuiltins,
   ...ExceptionBuiltins,
+  ...AsyncBuiltins,
+  ...IOBuiltins,
 ];

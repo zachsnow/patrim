@@ -9,6 +9,13 @@
 :: (!l . ?r:string) (#get ?l ?r) "object . property"
 :: (!l . ?r:number) (#get ?l ?r) "object . number"
 
+// Repeat something `n` times.
+:: (repeat 0 ?s) undefined
+:: (repeat ?n:number ?s) (
+  ?s ;
+  repeat (?n - 1) ?s
+)
+
 // Sequencing.
 :: (!l ; ?*rest) (?*rest)
 
