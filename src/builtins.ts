@@ -109,7 +109,9 @@ const OperatorBuiltins: Rule[] = [
   // Comparisons.
   binaryEagerOperator("===", (a, b) => a === b),
   binaryEagerOperator("!==", (a, b) => a !== b),
+  // eslint-disable-next-line eqeqeq
   binaryEagerOperator("==", (a, b) => a == b),
+  // eslint-disable-next-line eqeqeq
   binaryEagerOperator("!=", (a, b) => a != b),
 
   // Arithmetic.

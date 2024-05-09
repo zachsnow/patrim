@@ -377,7 +377,7 @@ const parseTerm = (tokenizer: Tokenizer): Term => {
  */
 const parseLine = (tokenizer: Tokenizer): Term => {
   const terms: Term[] = [];
-  while (true) {
+  for (;;) {
     switch (tokenizer.current) {
       case BeginObject:
       case BeginList:
@@ -408,7 +408,7 @@ const parseLine = (tokenizer: Tokenizer): Term => {
 
 const parseProgram = (tokenizer: Tokenizer): Program => {
   const program: Term[] = [];
-  while (true) {
+  for (;;) {
     // Skip empty lines.
     tokenizer.skip(EndOfLine);
 
