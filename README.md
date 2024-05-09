@@ -60,10 +60,15 @@ an interactive session after evaluating the given files, if any:
 
 ```
 $ pnpm run pc --interactive
-patrim ? :: hello "Hello, world!"
+? :: hello "Hello, world!"
+rule-36: hello => Hello, world!
+? hello
+'Hello, world!'
+? #exit 0
+$
 ```
 
-For complete usage information, use `pnpm run pc --help`.
+For complete usage information, see `pnpm run pc --help`.
 
 ## VS Code integration
 
