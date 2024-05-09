@@ -52,11 +52,11 @@ pnpm i
 To evaluate the contents of a file or files, use `pc`:
 
 ```
-$ pnpm run pc <file> <file> ...
+$ pnpm run pc [options] <file>...
 ```
 
 The resulting rewritten term will be printed to `stdout`. Pass `--interactive` to open
-a REPL after evaluating the given files, if any:
+an interactive session after evaluating the given files, if any:
 
 ```
 $ pnpm run pc --interactive

@@ -111,6 +111,13 @@ export class Register {
     return `${this.kind === "lazy" ? "?" : "!"}${this.splat ? "*" : ""}${this.name}${this.type ? `:${this.type}` : ""}`;
   }
 
+  /**
+   * Parses the given `input` string into a `Register` instance. If the input is not a valid
+   * register, returns `undefined`.
+   *
+   * @param input the string to parse
+   * @returns a `Register` instance or `undefined`
+   */
   public static parse(input: string): Register | undefined {
     input = input.trim();
     const m = input.match(/^([\?\!])(\*)?([a-zA-Z0-9-_\.]+)(\:.+)?$/);
@@ -272,6 +279,7 @@ export class Tokenizer {
 
   /**
    * Advance to the next token that does not match the given `token`.
+   *
    * @param token
    */
   public skip(token: Token): void {
@@ -303,7 +311,15 @@ export class Tokenizer {
  */
 export class ParseError extends Error {
   constructor(
+    /** The error message. */
     message: string,
+
+    /**
+     * Whether this parse error is potentially due to incomplete input;
+     * if `true` it's possible that the input is a prefix of a valid term.
+     *
+     * Used by the `pc` interactive mode.
+     */
     public incomplete: boolean = false,
   ) {
     super(message);
@@ -372,8 +388,9 @@ const parseTerm = (tokenizer: Tokenizer): Term => {
 
 /**
  * Parses a single "line" from the program, ignoring newlines within parens.
- * @param tokenizer
- * @returns
+ *
+ * @param tokenizer the tokenizer to read from
+ * @returns a parsed term; if no terms are found, returns `[]`.
  */
 const parseLine = (tokenizer: Tokenizer): Term => {
   const terms: Term[] = [];
@@ -406,6 +423,12 @@ const parseLine = (tokenizer: Tokenizer): Term => {
   }
 };
 
+/**
+ * Parses an entire program from the given `tokenizer`, returning a `Program` instance.
+ *
+ * @param tokenizer the tokenizer to read from
+ * @returns the parsed `Program`
+ */
 const parseProgram = (tokenizer: Tokenizer): Program => {
   const program: Term[] = [];
   for (;;) {
@@ -424,10 +447,10 @@ const parseProgram = (tokenizer: Tokenizer): Program => {
 };
 
 /**
- * Parses the given `input` string into a list of top-level terms.
+ * Parses the given `input` string into a `Program` -- a list of top-level terms.
  *
  * @param input a string containing a Patrim program
- * @returns a program
+ * @returns the parsed `Program`
  */
 export const parse = (input: string): Program => {
   const tokens = lex(input);

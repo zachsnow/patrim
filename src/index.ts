@@ -19,7 +19,8 @@ export const evaluate = (program: Program, context?: Context): unknown[] => {
 };
 
 /**
- * Executes the given `program`, discarding all but the final term.
+ * Executes the given `program`, discarding all but the final term. If
+ * no context is provided the default context is used.
  *
  * @param program the program to evaluate
  * @param context the evaluation context
