@@ -5,7 +5,7 @@ import { env } from "process";
 import { Recoverable, start } from "repl";
 import { parseArgs } from "util";
 import { Context, execute, parse, ParseError } from "../src";
-import { Builtins, CoreBuiltins } from "../src/builtins";
+import { Builtins, constants, CoreBuiltins } from "../src/builtins";
 
 const BIN = "patrim cauthon";
 
@@ -46,6 +46,19 @@ async function interactive(context: Context, history?: string) {
       debug && console.debug(`${BIN}: history loaded...`);
     });
   }
+
+  context.removeRule("#prompt");
+  context.addRules(
+    constants({
+      "#prompt": (s: string) => {
+        let result: string[] = [];
+        server.question(s, (answer: string) => {
+          result[0] = answer;
+        });
+        return result;
+      },
+    }),
+  );
 
   const promise = new Promise<void>((resolve) => {
     server.on("exit", () => {

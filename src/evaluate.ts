@@ -48,7 +48,7 @@ export class Context {
     /** The current rewriting iteration. */
     public iteration: number = 0,
     /** The maximum number of rewrites to perform before raising an error */
-    public maxIterations: number = 1000,
+    public maxIterations: number = Infinity,
   ) {
     this.rules = [...rules];
   }
@@ -69,6 +69,15 @@ export class Context {
 
     this.rules.push(rule);
     return rule;
+  };
+
+  /**
+   * Adds a list of rules to the context.
+   *
+   * @param rules the `Rule` instances to add
+   */
+  public addRules = (rules: Rule[]) => {
+    this.rules.push(...rules);
   };
 
   /**

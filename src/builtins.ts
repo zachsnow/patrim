@@ -1,6 +1,6 @@
 import fs from "fs";
 import { builtin, constant, Context, evaluateTerm, evaluateTerms, Rule, rule } from "./evaluate";
-import { parse, reg } from "./parse";
+import { parse, reg, Register } from "./parse";
 import { assert } from "./util";
 
 const binaryNumericOperator = (op: string, fn: (a: any, b: any) => any): Rule => {
@@ -17,6 +17,29 @@ const binaryEagerOperator = (op: string, fn: (a: any, b: any) => any): Rule => {
 
 const unaryEagerOperator = (op: string, fn: (a: any) => any): Rule => {
   return rule([op, reg("a", undefined, undefined, "eager")], [fn, [reg("a")]], op);
+};
+
+/**
+ * Creates a set of `Rule` instances from the given `values`. Functions
+ * are converted to eager rules with the appropriate number of registers.
+ * Non-functions are converted to constant rules.
+ *
+ * @param values the values to convert to `Rule` instances
+ * @returns an array of `Rule` instances
+ */
+export const constants = (values: Record<string, unknown>): Rule[] => {
+  return Object.entries(values).map(([name, value]) => {
+    if (typeof value === "function") {
+      const registers = Array(value.length)
+        .fill(0)
+        .map((n, i) => {
+          return new Register(`${i}`, undefined, undefined, "eager");
+        });
+      return rule([name, ...registers], [value, registers], name);
+    } else {
+      return rule(name, value, name);
+    }
+  });
 };
 
 /**
@@ -205,44 +228,12 @@ const AsyncBuiltins: Rule[] = [
   ),
 ];
 
-const IOBuiltins: Rule[] = [
-  rule(
-    ["#read", reg("filename", "string")],
-    [
-      (filename: string) => {
-        return fs.readFileSync(filename, "utf8");
-      },
-      [reg("filename")],
-    ],
-  ),
-  rule(
-    ["#write", reg("filename", "string"), reg("content", "string")],
-    [
-      (filename: string, content: string) => {
-        return fs.writeFileSync(filename, content);
-      },
-      [reg("filename"), reg("content")],
-    ],
-  ),
-  rule(
-    ["#print", reg("s", undefined, undefined, "eager")],
-    [
-      (s: any) => {
-        console.info(s);
-      },
-      [reg("s")],
-    ],
-  ),
-  rule(
-    ["#input", reg("s", undefined, undefined, "eager")],
-    [
-      (s: string) => {
-        // TODO: we need clean support for promises before this will work.
-      },
-      [reg("s")],
-    ],
-  ),
-];
+const IOBuiltins: Rule[] = constants({
+  "#read": (filename: string) => fs.readFileSync(filename, "utf8"),
+  "#write": (filename: string, value: string) => fs.writeFileSync(filename, value),
+  "#print": (value: any) => console.info(value),
+});
+
 /**
  * The default builtins.
  */

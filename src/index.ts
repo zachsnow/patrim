@@ -1,4 +1,4 @@
-import { Builtins } from "./builtins";
+import { Builtins, constants } from "./builtins";
 import { Context, evaluateTerms } from "./evaluate";
 import { Program } from "./parse";
 
@@ -11,10 +11,16 @@ export { parse, ParseError } from "./parse";
  *
  * @param program the program to evaluate
  * @param context the evaluation context
+ * @param values extra values to add to the context
  * @returns the evaluated program
  */
-export const evaluate = (program: Program, context?: Context): unknown[] => {
-  const c = context ?? new Context(Builtins);
+export const evaluate = (
+  program: Program,
+  context?: Context,
+  values?: Record<string, unknown>,
+): unknown[] => {
+  const valueRules = values ? constants(values) : [];
+  const c = context ?? new Context([...Builtins, ...valueRules]);
   return evaluateTerms(program, c);
 };
 
@@ -24,10 +30,15 @@ export const evaluate = (program: Program, context?: Context): unknown[] => {
  *
  * @param program the program to evaluate
  * @param context the evaluation context
+ * @param values extra values to add to the context
  * @returns the final term of the evaluated program
  */
-export const execute = (program: Program, context?: Context): unknown => {
-  const evaluated = evaluate(program, context);
+export const execute = (
+  program: Program,
+  context?: Context,
+  values?: Record<string, unknown>,
+): unknown => {
+  const evaluated = evaluate(program, context, values);
   if (evaluated.length) {
     return evaluated[evaluated.length - 1];
   }
