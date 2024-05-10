@@ -18,14 +18,12 @@
 :: (!l ; ) undefined "; (implicit trailing undefined)"
 :: (!l ; ?*rest) (?*rest) ";"
 
-
 // Repeat something `n` times.
-:: (repeat 0 ?s) undefined
+:: (repeat 0 ?s) undefined "repeat 0"
 :: (repeat ?n:number ?s) (
   ?s ;
   repeat (?n - 1) ?s
-)
-
+) "repeat n"
 
 // Test functions.
 :: (assert !test) (assertAux ?test)
