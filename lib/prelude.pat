@@ -8,9 +8,10 @@
 // A nicer syntax for binding names to eagerly evaluated values
 :: (?pattern:string := !replacement) (:: ?pattern ?replacement) ":="
 
-// A nicer syntax for keying into objects and lists.
+// A nicer syntax for keying into objects and lists, and calling methods.
 :: (!l . ?r:string) (#get ?l ?r) "object . property"
 :: (!l . ?r:number) (#get ?l ?r) "object . number"
+:: (!l . ?r:string ?args:array) ((?l . ?r) ?l ?args) "object . property (...args)"
 :: (!l . ?r:string ?*rest) ((#get ?l ?r) ?*rest) "object . property ..."
 :: (!l . ?r:number ?*rest) ((#get ?l ?r) ?*rest) "object . number ..."
 

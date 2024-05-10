@@ -47,7 +47,7 @@ export const constants = (values: Record<string, unknown>): Rule[] => {
  * external JS functions.
  */
 export const CoreBuiltins: Rule[] = [
-  // Calling functions.
+  // Implicit invocation. Calling JS functions from Patrim automatically.
   builtin(
     [reg("fn", "function"), reg("args", "array")],
     function (this: Context, bindings: Rule.Bindings) {
@@ -57,6 +57,19 @@ export const CoreBuiltins: Rule[] = [
       assert(typeof fn === "function", "expected function");
 
       return fn.apply(this, bindings.args.value);
+    },
+    "call",
+  ),
+  builtin(
+    [reg("fn", "function"), reg("this", undefined, undefined, "eager"), reg("args", "array")],
+    function (this: Context, bindings: Rule.Bindings) {
+      const fn = bindings.fn?.value;
+      const thisArg = bindings.this?.value;
+
+      // `fn` should be a function due to the register requiring a function type.
+      assert(typeof fn === "function", "expected function");
+
+      return fn.apply(thisArg, bindings.args.value);
     },
     "call",
   ),
