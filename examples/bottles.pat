@@ -10,4 +10,4 @@
   (beer (?n - 1)) ;
 )
 
-beer 3
+beer 5
