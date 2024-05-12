@@ -1,7 +1,7 @@
 set -euo pipefail
 
 echo "Type checking..."
-pnpm exec --noEmit
+pnpm exec tsc --noEmit
 
 echo "Building executables..."
 pnpm exec tsc --build tsconfig.build.json
