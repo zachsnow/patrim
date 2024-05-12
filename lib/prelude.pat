@@ -17,6 +17,7 @@
 
 // Sequencing.
 :: (!l ; ) undefined "; (implicit trailing undefined)"
+:: (!l ; ?r) ?r "; (unwrap final)"
 :: (!l ; ?*rest) (?*rest) ";"
 
 // Repeat something `n` times.
