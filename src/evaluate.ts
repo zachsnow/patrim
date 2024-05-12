@@ -1,5 +1,5 @@
 import util from "util";
-import { Register } from "./parse";
+import { printTerm, Register } from "./parse";
 import { assert, isSimpleObject, SimpleObject } from "./util";
 
 /**
@@ -179,9 +179,9 @@ export class Rule {
   public toString(): string {
     switch (this.replacement.type) {
       case "term":
-        return `${this.pattern} => ${this.replacement.term}`;
+        return `${printTerm(this.pattern)} => ${printTerm(this.replacement.term)}`;
       case "builtin":
-        return `${this.pattern} => builtin ${this.replacement.builtin.name || "(anonymous)"}`;
+        return `${printTerm(this.pattern)} => builtin ${this.replacement.builtin.name || "(anonymous)"}`;
     }
   }
 

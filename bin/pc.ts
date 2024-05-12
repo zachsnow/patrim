@@ -6,6 +6,7 @@ import { Recoverable, start } from "repl";
 import { parseArgs } from "util";
 import { Context, execute, parse, ParseError } from "../src";
 import { Builtins, constants, CoreBuiltins } from "../src/builtins";
+import { printProgram } from "../src/parse";
 
 const BIN = "patrim cauthon";
 
@@ -188,7 +189,7 @@ async function main(): Promise<number | undefined> {
     debug && console.debug(`${BIN}: read files:`, content);
 
     const program = parse(content);
-    debug && console.debug(`${BIN}: parsed program:`, program);
+    debug && console.debug(`${BIN}: parsed program:`, printProgram(program));
 
     // Create a context so we can pass it to interactive mode if needed; that way
     // rules defined in the program can be used interactively.

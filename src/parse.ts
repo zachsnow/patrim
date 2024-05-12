@@ -230,7 +230,6 @@ export const lex = (input: string): Token[] => {
 const interpretEscapes = (input: string): string => {
   return input.replace(/\\["\bfnrtv0]/gi, (match) => {
     switch (match[1]) {
-      case "'":
       case '"':
       case "\\":
         return match[1];
@@ -252,6 +251,33 @@ const interpretEscapes = (input: string): string => {
         // Should never match unless you change the regex and fail to update
         // the cases.
         return match.substring(1);
+    }
+  });
+};
+
+const restoreEscapes = (input: string): string => {
+  return input.replace(/["\b\f\n\r\t\v\0]/g, (match) => {
+    switch (match) {
+      case '"':
+        return '\\"';
+      case "\b":
+        return "\\b";
+      case "\f":
+        return "\\f";
+      case "\n":
+        return "\\n";
+      case "\r":
+        return "\\r";
+      case "\t":
+        return "\\t";
+      case "\v":
+        return "\\v";
+      case "\0":
+        return "\\0";
+      default:
+        // Should never match unless you change the regex and fail to update
+        // the cases.
+        return match;
     }
   });
 };
@@ -456,4 +482,47 @@ export const parse = (input: string): Program => {
   const tokens = lex(input);
   const tokenizer = new Tokenizer(tokens);
   return parseProgram(tokenizer);
+};
+
+export const printTerm = (term: unknown): string => {
+  switch (typeof term) {
+    case "string":
+      return `"${restoreEscapes(term)}"`;
+    case "bigint":
+    case "number":
+    case "boolean":
+    case "symbol":
+      return String(term);
+    case "function":
+      return (term as Function).toString();
+    case "undefined":
+      return "undefined";
+    case "object":
+      if (term === null) {
+        return "null";
+      }
+      if (Array.isArray(term)) {
+        return `(${term.map(printTerm).join(" ")})`;
+      }
+      if (isSimpleObject(term)) {
+        const kvs = Object.entries(term)
+          .map(([k, v]) => `${k} ${printTerm(v)}`)
+          .join(" ");
+        return `{ ${kvs} }`;
+      }
+      return term.toString();
+    default:
+      return String(term);
+  }
+};
+
+export const printProgram = (program: Program): string => {
+  return program
+    .map((term) => {
+      if (Array.isArray(term)) {
+        return term.map(printTerm).join(" ");
+      }
+      return printTerm(term);
+    })
+    .join("\n");
 };
