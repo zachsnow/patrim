@@ -484,6 +484,13 @@ export const parse = (input: string): Program => {
   return parseProgram(tokenizer);
 };
 
+/**
+ * Pretty print the given `term` as a string. It is intended to be the inverse of `parseTerm`,
+ * excepting whitespace and string quoting.
+ *
+ * @param term the term to pretty print
+ * @returns a string representation of the term
+ */
 export const printTerm = (term: unknown): string => {
   switch (typeof term) {
     case "string":
@@ -516,6 +523,13 @@ export const printTerm = (term: unknown): string => {
   }
 };
 
+/**
+ * Pretty print the given `program` as a string. It is intended to be the inverse of `parse`,
+ * excepting whitespace and string quoting.
+ *
+ * @param program the program to pretty print
+ * @returns a string representation of the program
+ */
 export const printProgram = (program: Program): string => {
   return program
     .map((term) => {
