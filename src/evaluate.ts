@@ -357,7 +357,10 @@ export function match(pattern: unknown, input: unknown): Rule.Bindings | null {
  */
 export function instantiate(term: unknown, bindings: Rule.Bindings): unknown {
   if (term instanceof Register) {
-    return bindings[term.name]?.value;
+    if (term.name in bindings) {
+      return bindings[term.name].value;
+    }
+    return term;
   }
 
   switch (typeof term) {
