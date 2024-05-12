@@ -6,6 +6,7 @@ import { Recoverable, start } from "repl";
 import { parseArgs } from "util";
 import { Context, execute, parse, ParseError } from "../src";
 import { Builtins, constants, CoreBuiltins } from "../src/builtins";
+import { IOBuiltins } from "../src/io-builtins";
 import { printProgram } from "../src/parse";
 
 const BIN = "patrim cauthon";
@@ -196,7 +197,7 @@ async function main(): Promise<number | undefined> {
     if (options.noBuiltins) {
       debug && console.debug(`${BIN}: skipping builtins...`);
     }
-    const context = new Context(options.noBuiltins ? CoreBuiltins : Builtins);
+    const context = new Context(options.noBuiltins ? CoreBuiltins : [...Builtins, ...IOBuiltins]);
     const result = execute(program, context);
 
     if (options.interactive) {

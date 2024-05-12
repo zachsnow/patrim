@@ -1,6 +1,5 @@
-import fs from "fs";
-import { builtin, constant, Context, evaluateTerm, evaluateTerms, Rule, rule } from "./evaluate";
-import { parse, reg, Register } from "./parse";
+import { builtin, constant, Context, evaluateTerm, Rule, rule } from "./evaluate";
+import { reg, Register } from "./parse";
 import { assert } from "./util";
 
 const binaryNumericOperator = (op: string, fn: (a: any, b: any) => any): Rule => {
@@ -119,17 +118,6 @@ export const CoreBuiltins: Rule[] = [
   ),
 
   rule(
-    ["#include", reg("filename", "string")],
-    [
-      function (this: Context, filename: string) {
-        const content = fs.readFileSync(filename, "utf8");
-        const program = parse(content);
-        evaluateTerms(program, this);
-      },
-      [reg("filename")],
-    ],
-  ),
-  rule(
     ["#exit", reg("n", "number")],
     [
       function (this: Context, n: number) {
@@ -241,12 +229,6 @@ const AsyncBuiltins: Rule[] = [
   ),
 ];
 
-const IOBuiltins: Rule[] = constants({
-  "#read": (filename: string) => fs.readFileSync(filename, "utf8"),
-  "#write": (filename: string, value: string) => fs.writeFileSync(filename, value),
-  "#print": (value: any) => console.info(value),
-});
-
 /**
  * The default builtins.
  */
@@ -256,5 +238,4 @@ export const Builtins: Rule[] = [
   ...ObjectBuiltins,
   ...ExceptionBuiltins,
   ...AsyncBuiltins,
-  ...IOBuiltins,
 ];

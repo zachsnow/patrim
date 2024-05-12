@@ -3,7 +3,7 @@ import { Context, evaluateTerms } from "./evaluate";
 import { Program } from "./parse";
 
 export { Context } from "./evaluate";
-export { parse, ParseError, printProgram } from "./parse";
+export { parse, ParseError, printProgram, printTerm } from "./parse";
 
 /**
  * Evaluates the given `program` term under the (optional) `context`. If
