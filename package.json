@@ -1,7 +1,18 @@
 {
   "private": true,
   "name": "patrim",
-  "version": "0.0.1",
+  "description": "The Patrim term rewriting language",
+  "keywords": [
+    "patrim",
+    "term",
+    "rewriting",
+    "programming language"
+  ],
+  "version": "0.1.0",
+  "main": "./dist/index.js",
+  "bin": {
+    "pc": "./dist/bin/pc.js"
+  },
   "scripts": {
     "format": "prettier --ignore-unknown --cache --write .",
     "lint": "eslint . --ext .ts,.tsx --cache",
@@ -9,10 +20,6 @@
     "build": "./build.sh",
     "test": "jest --env=node --colors && ./bin/test.sh",
     "pc": "ts-node ./bin/pc.ts"
-  },
-  "engines": {
-    "node": "20",
-    "pnpm": "8"
   },
   "devDependencies": {
     "@types/jest": "^29.5.11",
@@ -28,11 +35,15 @@
     "typescript": "^5.3.3",
     "rollup": "^4.17.2"
   },
-  "include": [
-    "./**/*.ts"
+  "files": [
+    "dist/**/*"
   ],
-  "exclude": [
-    "node_modules",
-    "build"
-  ]
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/zachsnow/patrim.git"
+  },
+  "bugs": {
+    "url": "https://github.com/zachsnow/patrim/issues"
+  }
 }

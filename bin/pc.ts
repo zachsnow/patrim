@@ -123,7 +123,7 @@ const parseArgsConfig = {
 } as const;
 
 function help() {
-  console.info(`Usage: ${BIN} [options] <file>...`);
+  console.info(`Usage: pc [options] <file>...`);
   console.info(`Options:`);
   Object.entries(parseArgsConfig.options).forEach(([name, option]) => {
     const short = "short" in option ? `-${option.short}, ` : "";
