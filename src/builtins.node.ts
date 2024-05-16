@@ -3,6 +3,8 @@ import { constants } from "./builtins";
 import { Context, evaluateTerms, Rule, rule } from "./evaluate";
 import { parse, reg } from "./parse";
 
+let outputElement: HTMLElement | undefined;
+
 export const IOBuiltins: Rule[] = [
   ...constants({
     "#read": (filename: string) => fs.readFileSync(filename, "utf8"),
@@ -22,3 +24,5 @@ export const IOBuiltins: Rule[] = [
     ],
   ),
 ];
+
+export const bindOutput = (node: HTMLElement) => {

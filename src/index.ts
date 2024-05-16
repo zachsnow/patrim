@@ -2,8 +2,9 @@ import { Builtins, constants } from "./builtins";
 import { Context, evaluateTerms } from "./evaluate";
 import { Program } from "./parse";
 
-export { Context } from "./evaluate";
-export { parse, ParseError, printProgram, printTerm } from "./parse";
+export { Builtins } from "./builtins";
+export { builtin, constant, Context, rule } from "./evaluate";
+export { parse, ParseError, printProgram, printTerm, reg } from "./parse";
 
 /**
  * Evaluates the given `program` term under the (optional) `context`. If

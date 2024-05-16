@@ -6,7 +6,7 @@ import { Recoverable, start } from "repl";
 import { parseArgs } from "util";
 import { Context, execute, parse, ParseError } from "../src";
 import { Builtins, constants, CoreBuiltins } from "../src/builtins";
-import { IOBuiltins } from "../src/io-builtins";
+import { IOBuiltins } from "../src/builtins.node";
 import { printProgram } from "../src/parse";
 
 const BIN = "patrim cauthon";
