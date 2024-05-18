@@ -1,5 +1,7 @@
 set -euo pipefail
 
+mkdir -p ./dist
+
 # Clean.
 echo "Cleaning..."
 rm -rf ./dist/*
@@ -22,7 +24,13 @@ sed -i '' '1 s/ts-node/node/' ./dist/bin/pc.js
 PATRIM_VERSION=$(node -e "console.info(require('./package.json').version)")
 PATRIM_VERSION=$PATRIM_VERSION pnpm exec saladplate ./dist/bin/pc.js --output ./dist/bin/pc.js
 
-# Bundle the library for web use with a shim.
+# Bundle the JS library for web use with a shim.
 echo "Bundling..."
-pnpm exec rollup ./dist/src/index.js -f iife -o dist/lib/patrim.js --name patrim --external util --globals util:utilShim --context window --plugin commonjs
+pnpm exec rollup ./dist/src/index.js -f iife -o dist/lib/patrim.js --name patrim --external util --globals util:utilShim --context window --plugin commonjs 2>/dev/null
 cat ./src/shim.js | cat - ./dist/lib/patrim.js > ./dist/lib/temp && mv ./dist/lib/temp ./dist/lib/patrim.js
+
+# Copy Patrim library.
+echo "Copying libraries..."
+cp -r ./lib/* ./dist/lib
+
+echo "Done."
