@@ -14,6 +14,9 @@ chmod u+x ./dist/bin/*
 # the compiled JS.
 sed -i '' '1 s/ts-node/node/' ./dist/bin/pc.js
 
+# Embed the version information in the built executable.
+pnpm exec saladplate ./dist/bin/pc.js --output ./dist/bin/pc.js
+
 # Bundle the library for web use with a shim.
 echo "Bundling..."
 pnpm exec rollup ./dist/src/index.js -f iife -o dist/lib/patrim.js --name patrim --external util --globals util:utilShim --context window

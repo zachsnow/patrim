@@ -138,9 +138,14 @@ function parseOptions() {
   return parseArgs(parseArgsConfig);
 }
 
+const VERSION = "${{ npm_package_version }}";
+
 function version() {
-  const version = env.npm_package_version;
-  console.info(`${BIN}: version ${version ?? "unknown"}`);
+  let version = VERSION;
+  if (version.startsWith("$")) {
+    version = env.npm_package_version ?? "";
+  }
+  console.info(`${BIN}: version ${version || "unknown"}`);
 }
 
 async function main(): Promise<number | undefined> {

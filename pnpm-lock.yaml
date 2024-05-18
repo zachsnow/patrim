@@ -32,6 +32,9 @@ devDependencies:
   rollup:
     specifier: ^4.17.2
     version: 4.17.2
+  saladplate:
+    specifier: ^0.1.2
+    version: 0.1.2
   ts-jest:
     specifier: ^29.1.2
     version: 29.1.2(@babel/core@7.24.4)(jest@29.7.0)(typescript@5.3.3)
@@ -2930,6 +2933,11 @@ packages:
 
   /safe-buffer@5.2.1:
     resolution: {integrity: sha512-rp3So07KcdmmKbGvgaNxQSJr7bGVSVk5S9Eq1F+ppbRo70+YeaDxkw5Dd8NPN+GD6bjnYm2VuPuCXmpuYvmCXQ==}
+    dev: true
+
+  /saladplate@0.1.2:
+    resolution: {integrity: sha512-rd8YgI3EBUBvTybBGJuEpnM2aXQ4tVT+AYsfi08QIwKgS1/N2h8dfAh1KATh7B1j4TpEA+D2nQ8TCWK28Tfh8w==}
+    hasBin: true
     dev: true
 
   /semver@6.3.1:
