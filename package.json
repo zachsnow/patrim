@@ -1,5 +1,4 @@
 {
-  "private": true,
   "name": "patrim",
   "description": "The Patrim term rewriting language",
   "keywords": [
