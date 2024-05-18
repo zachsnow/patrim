@@ -17,6 +17,7 @@
     "lint": "eslint . --ext .ts,.tsx --cache",
     "types": "tsc --noEmit",
     "build": "./build.sh",
+    "publish": "pnpm run build && npm publish",
     "test": "jest --env=node --colors && ./bin/test.sh",
     "pc": "ts-node ./bin/pc.ts"
   },
