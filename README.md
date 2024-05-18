@@ -32,8 +32,8 @@ repeat 3 (print hello)
 
 Evaluating the program:
 
-```
-$ pnpm run pc hello.pat
+```bash
+$ pc hello.pat
 
 Hello, world!
 Hello, world!
@@ -43,23 +43,22 @@ Hello, world!
 ## Installation
 
 ```
-cd patrim
-pnpm i
+$ npm -g install patrim
 ```
 
 ## Usage
 
 To evaluate the contents of a file or files, use `pc`:
 
-```
-$ pnpm run pc [options] <file>...
+```bash
+$ pc [options] <file>...
 ```
 
 The resulting rewritten term will be printed to `stdout`. Pass `--interactive` to open
 an interactive session after evaluating the given files, if any:
 
-```
-$ pnpm run pc --interactive
+```bash
+$ pc --interactive
 ? :: hello "Hello, world!"
 rule-36: hello => Hello, world!
 ? hello
@@ -68,7 +67,7 @@ rule-36: hello => Hello, world!
 $
 ```
 
-For complete usage information, see `pnpm run pc --help`.
+For complete usage information, see `pc --help`.
 
 ## VS Code integration
 
