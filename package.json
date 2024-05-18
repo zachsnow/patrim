@@ -9,7 +9,7 @@
     "programming language"
   ],
   "version": "0.1.0",
-  "main": "./dist/index.js",
+  "main": "./dist/src/index.js",
   "bin": {
     "pc": "./dist/bin/pc.js"
   },

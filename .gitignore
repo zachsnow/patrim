@@ -12,4 +12,4 @@ node_modules
 # Don't accidentally run `npm`, dummy.
 package-lock.json
 
-build/
+dist/

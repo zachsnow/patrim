@@ -10,7 +10,7 @@
     "isolatedModules": true,
     "sourceMap": true,
     "rootDir": ".",
-    "outDir": "build",
+    "outDir": "dist",
     "target": "es6",
     "lib": ["es6"]
   },
