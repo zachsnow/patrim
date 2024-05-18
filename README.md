@@ -72,4 +72,5 @@ For complete usage information, see `pnpm run pc --help`.
 
 ## VS Code integration
 
-See [patrim-vscode](https://github.com/zachsnow/patrim-vscode) for VS Code integration.
+See [patrim-vscode](https://marketplace.visualstudio.com/items?itemName=zachsnow.patrim-vscode)
+for VS Code integration.
