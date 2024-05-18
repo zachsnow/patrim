@@ -21,6 +21,7 @@
     "pc": "ts-node ./bin/pc.ts"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^25.0.7",
     "@types/jest": "^29.5.11",
     "@types/node": "^20.12.7",
     "@typescript-eslint/eslint-plugin": "^6.19.1",

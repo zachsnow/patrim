@@ -24,5 +24,5 @@ PATRIM_VERSION=$PATRIM_VERSION pnpm exec saladplate ./dist/bin/pc.js --output ./
 
 # Bundle the library for web use with a shim.
 echo "Bundling..."
-pnpm exec rollup ./dist/src/index.js -f iife -o dist/lib/patrim.js --name patrim --external util --globals util:utilShim --context window
+pnpm exec rollup ./dist/src/index.js -f iife -o dist/lib/patrim.js --name patrim --external util --globals util:utilShim --context window --plugin commonjs
 cat ./src/shim.js | cat - ./dist/lib/patrim.js > ./dist/lib/temp && mv ./dist/lib/temp ./dist/lib/patrim.js
