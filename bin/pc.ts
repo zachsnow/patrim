@@ -138,10 +138,14 @@ function parseOptions() {
   return parseArgs(parseArgsConfig);
 }
 
-const VERSION = "${{ npm_package_version }}";
+// Replaced at build-time.
+const PATRIM_VERSION = "${{ PATRIM_VERSION }}";
 
 function version() {
-  let version = VERSION;
+  let version = PATRIM_VERSION;
+
+  // If we didn't replace it, we're running from source, and this environment
+  // variable should be set.
   if (version.startsWith("$")) {
     version = env.npm_package_version ?? "";
   }

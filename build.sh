@@ -1,5 +1,8 @@
 set -euo pipefail
 
+# Clean.
+rm -rf ./dist/*
+
 # Type check everything, including tests.
 echo "Type checking..."
 pnpm exec tsc --noEmit
@@ -15,7 +18,8 @@ chmod u+x ./dist/bin/*
 sed -i '' '1 s/ts-node/node/' ./dist/bin/pc.js
 
 # Embed the version information in the built executable.
-pnpm exec saladplate ./dist/bin/pc.js --output ./dist/bin/pc.js
+PATRIM_VERSION=$(node -e "console.info(require('./package.json').version)")
+PATRIM_VERSION=$PATRIM_VERSION pnpm exec saladplate ./dist/bin/pc.js --output ./dist/bin/pc.js
 
 # Bundle the library for web use with a shim.
 echo "Bundling..."
