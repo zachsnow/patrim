@@ -1,6 +1,7 @@
 set -euo pipefail
 
 # Clean.
+echo "Cleaning..."
 rm -rf ./dist/*
 
 # Type check everything, including tests.
